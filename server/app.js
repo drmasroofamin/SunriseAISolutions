@@ -167,7 +167,7 @@ export function createApp({
           if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 6000) return json(response, 502, { code: 'AI_UNAVAILABLE' });
           return json(response, 200, { reply: result.reply });
         } catch (error) {
-          const statuses = { AI_NOT_CONFIGURED: 503, AI_BUSY: 429, AI_TIMEOUT: 504, AI_UNAVAILABLE: 502, AI_AUTH_FAILED: 503, AI_QUOTA_EXCEEDED: 503 };
+          const statuses = { AI_NOT_CONFIGURED: 503, AI_BUSY: 429, AI_TIMEOUT: 504, AI_UNAVAILABLE: 502, AI_AUTH_FAILED: 503, AI_QUOTA_EXCEEDED: 503, AI_MODEL_UNAVAILABLE: 503 };
           const code = Object.hasOwn(statuses, error?.code) ? error.code : 'AI_UNAVAILABLE';
           return json(response, statuses[code], { code });
         }

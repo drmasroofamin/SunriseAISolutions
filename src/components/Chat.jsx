@@ -4,9 +4,10 @@ import { useChat } from './ChatContext';
 
 const booking = 'https://calendly.com/sunrisesolution93/30min';
 const errors = {
+  AI_MODEL_UNAVAILABLE: 'AI chat is temporarily unavailable. Please contact our team or book a free call.',
   AI_AUTH_FAILED: 'AI chat is temporarily unavailable. Please contact our team or book a free call.',
   AI_QUOTA_EXCEEDED: 'AI chat is temporarily unavailable. Please contact our team or book a free call.',
-  AI_BUSY: 'The AI service is busy. Please wait a moment, then try again.',
+  AI_BUSY: 'The AI request limit has been reached. Please try again later or book a free call.',
   RATE_LIMITED: 'You’ve reached the chat limit for now. Please try again later or book a free call.',
   AI_TIMEOUT: 'That reply took too long. Your message is ready to retry.',
   AI_UNAVAILABLE: 'We couldn’t get an AI reply. Your message is ready to retry, or you can book a call below.',

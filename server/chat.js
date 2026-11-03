@@ -1,3 +1,5 @@
+import { classifyOpenAIError } from './openai-error.js';
+
 const CHAT_ENDPOINT = 'https://api.openai.com/v1/responses';
 const MAX_MESSAGES = 20;
 const MAX_MESSAGE_CHARS = 2000;
@@ -61,14 +63,13 @@ export function createChatReply({ apiKey, model = 'gpt-4.1-mini', fetchImpl = fe
         }),
         signal: controller.signal,
       });
-      if (response.status === 401 || response.status === 403) throw chatError(503, 'AI_AUTH_FAILED');
-      if (response.status === 429) {
-        let quotaExceeded = false;
-        try { quotaExceeded = (await response.json())?.error?.code === 'insufficient_quota'; }
-        catch { /* An unreadable rate-limit response stays a generic busy state. */ }
-        throw quotaExceeded ? chatError(503, 'AI_QUOTA_EXCEEDED') : chatError(429, 'AI_BUSY');
+      if (!response.ok) {
+        let body;
+        try { body = await response.json(); }
+        catch { /* HTML or unreadable errors use the status-based fixed classification. */ }
+        const failure = classifyOpenAIError(response.status, body);
+        throw chatError(failure.status, failure.code);
       }
-      if (!response.ok) throw chatError(502, 'AI_UNAVAILABLE');
       const result = await response.json();
       if (result?.error || (result?.status && result.status !== 'completed')) throw chatError(502, 'AI_UNAVAILABLE');
       const text = Array.isArray(result?.output) ? result.output
@@ -81,7 +82,7 @@ export function createChatReply({ apiKey, model = 'gpt-4.1-mini', fetchImpl = fe
       return { reply: text };
     } catch (error) {
       if (controller.signal.aborted) throw chatError(504, 'AI_TIMEOUT');
-      if (['AI_BUSY', 'AI_AUTH_FAILED', 'AI_QUOTA_EXCEEDED', 'AI_UNAVAILABLE'].includes(error?.code)) throw error;
+      if (['AI_BUSY', 'AI_AUTH_FAILED', 'AI_QUOTA_EXCEEDED', 'AI_MODEL_UNAVAILABLE', 'AI_UNAVAILABLE'].includes(error?.code)) throw error;
       throw chatError(502, 'AI_UNAVAILABLE');
     } finally {
       clearTimeout(timer);

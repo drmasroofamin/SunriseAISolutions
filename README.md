@@ -52,6 +52,18 @@ The assistant uses server-owned SunriseAI information, asks relevant follow-up q
 
 `GET /api/chat/status` reports only whether a key is configured, not whether it is valid or the project has credits. Missing configuration, invalid credentials, quota limits, slow requests, and connection failures show honest unavailable/retry states while keeping the visitor's message. If setup fails, inspect the `/api/chat` response in the browser's Network panel: `AI_AUTH_FAILED` indicates rejected credentials/access; `AI_QUOTA_EXCEEDED` indicates insufficient API quota; `AI_BUSY` or `RATE_LIMITED` indicate a temporary limit. Share only that code, never the key. Live AI replies require your own private key and must be checked after configuration.
 
+## Diagnose an AI request limit
+
+`npm run ai:check` checks local key presence without calling OpenAI. For a useful diagnosis of a failed AI request, run:
+
+```sh
+npm run ai:check -- --test
+```
+
+The explicit `--test` makes one small generation request, with a maximum of 16 output tokens. It can use API credits. It sends only a fixed test prompt and prints safe HTTP/error codes, not the key, visitor messages, organization details, or raw provider errors. There are no automatic retries.
+
+`AI_QUOTA_EXCEEDED` means to check API credits/billing and the limits for the key's OpenAI project. `AI_BUSY` reports a request/token limit and does not establish a general service outage. `AI_AUTH_FAILED` indicates rejected access; `AI_MODEL_UNAVAILABLE` indicates model access or configuration needs attention. Check https://platform.openai.com/settings/organization/billing/overview and the project's Limits page. ChatGPT subscriptions and API billing are separate. After correcting settings, restart `npm run dev` to reload the key/model before testing the assistant again.
+
 ## Diagnose mail failures without sending an email
 
 Keep `npm run dev` running and open a second terminal in this project:

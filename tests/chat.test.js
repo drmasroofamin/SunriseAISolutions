@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createChatReply, validateChatMessages } from '../server/chat.js';
+import { classifyOpenAIError } from '../server/openai-error.js';
 
 const history = [
   { role: 'user', content: 'I want an AI bot.' },
@@ -62,7 +63,7 @@ test('missing API key and invalid history never call the provider', async () => 
 });
 
 for (const [status, code] of [[429, 'AI_BUSY'], [401, 'AI_AUTH_FAILED'], [403, 'AI_AUTH_FAILED'], [500, 'AI_UNAVAILABLE']]) {
-  test(`upstream ${status} is sanitized without reading or leaking raw errors`, async () => {
+  test(`upstream ${status} with an unreadable error body is sanitized without leaking details`, async () => {
     let calls = 0;
     const reply = createChatReply({ apiKey: 'test', fetchImpl: async () => {
       calls++;
@@ -109,4 +110,37 @@ test('a stalled provider request aborts at the deadline and never retries', asyn
   }) });
   await assert.rejects(reply(history), { status: 504, code: 'AI_TIMEOUT' });
   assert.equal(calls, 1);
+});
+
+for (const [label, error] of [
+  ['type-only insufficient quota', { type: 'insufficient_quota' }],
+  ['hard billing limit code', { code: 'billing_hard_limit_reached' }],
+  ['hard billing limit type', { type: 'billing_hard_limit_reached' }],
+  ['inactive billing code', { code: 'billing_not_active' }],
+]) {
+  test(`${label} is a quota failure, not a temporary busy response`, async () => {
+    const body = { error: { ...error, message: 'private-account-detail' } };
+    assert.equal(classifyOpenAIError(429, body).code, 'AI_QUOTA_EXCEEDED');
+    const reply = createChatReply({ apiKey: 'test', fetchImpl: async () => ({ ok: false, status: 429, json: async () => body }) });
+    await assert.rejects(reply(history), { status: 503, code: 'AI_QUOTA_EXCEEDED', message: 'AI_QUOTA_EXCEEDED' });
+  });
+}
+
+test('explicit token/request rate limits retain safe metadata for diagnostics', () => {
+  assert.deepEqual(classifyOpenAIError(429, { error: { code: 'rate_limit_exceeded', type: 'tokens', message: 'private organization token counts' } }), {
+    status: 429, code: 'AI_BUSY', providerCode: 'rate_limit_exceeded', providerType: 'tokens',
+  });
+});
+
+test('unknown provider metadata and raw error content never leave the classifier', () => {
+  const failure = classifyOpenAIError(429, { error: { code: 'private-api-key', type: 'private-organization', message: 'private-billing-detail', extra: 'private-details' } });
+  assert.deepEqual(failure, { status: 429, code: 'AI_BUSY', providerCode: 'unrecognized', providerType: 'unrecognized' });
+  assert.ok(!JSON.stringify(failure).includes('private'));
+  assert.deepEqual(classifyOpenAIError(500, null), { status: 502, code: 'AI_UNAVAILABLE', providerCode: 'unrecognized', providerType: 'unrecognized' });
+});
+
+test('missing or inaccessible model is distinct from transient service unavailability', async () => {
+  const body = { error: { code: 'model_not_found', type: 'invalid_request_error', message: 'private-project-detail' } };
+  assert.deepEqual(classifyOpenAIError(404, body), { status: 503, code: 'AI_MODEL_UNAVAILABLE', providerCode: 'model_not_found', providerType: 'invalid_request_error' });
+  await assert.rejects(createChatReply({ apiKey: 'test', fetchImpl: async () => ({ ok: false, status: 404, json: async () => body }) })(history), { status: 503, code: 'AI_MODEL_UNAVAILABLE', message: 'AI_MODEL_UNAVAILABLE' });
 });

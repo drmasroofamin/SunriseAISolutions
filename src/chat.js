@@ -17,7 +17,7 @@ export async function requestChatReply(messages, { fetchImpl = fetch, timeoutMs 
     const result = await response.json();
     if (!response.ok || typeof result?.reply !== 'string' || !result.reply.trim()) {
       const error = new Error('AI chat is unavailable.');
-      const allowed = ['AI_NOT_CONFIGURED', 'AI_BUSY', 'AI_TIMEOUT', 'AI_UNAVAILABLE', 'AI_AUTH_FAILED', 'AI_QUOTA_EXCEEDED', 'RATE_LIMITED'];
+      const allowed = ['AI_NOT_CONFIGURED', 'AI_BUSY', 'AI_TIMEOUT', 'AI_UNAVAILABLE', 'AI_AUTH_FAILED', 'AI_MODEL_UNAVAILABLE', 'AI_QUOTA_EXCEEDED', 'RATE_LIMITED'];
       error.code = allowed.includes(result?.code) ? result.code : 'AI_UNAVAILABLE';
       throw error;
     }
