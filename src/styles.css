@@ -49,3 +49,13 @@ main{overflow:clip}.hero-glow{pointer-events:none}
 .chat-lead-form .chat-lead-consent{font-size:8px;color:#929bad;line-height:1.7;margin:9px 0 0}
 .chat-lead-form .chat-lead-success,.chat-lead-form .chat-lead-error{font-size:10px;line-height:1.7;border:1px solid #89c79e35;border-radius:5px;padding:10px;margin:10px 0 0;color:#b9dcc5}
 .chat-lead-form .chat-lead-error{color:#e4bfa0;border-color:#e4a96c35}
+/* Voice entry points stay visible in the first screen and while browsing. */
+.hero-voice-cta{display:flex;align-items:center;gap:12px;max-width:100%;margin-top:17px;padding:12px 15px;text-align:left;border:1px solid #f0ae6755;border-radius:10px;background:linear-gradient(110deg,#ffac6211,#7b61ff0b);color:#f2e3d4;box-shadow:0 5px 25px #ff9b4510;transition:border-color .2s,transform .2s}
+.hero-voice-cta:hover{border-color:#ffc17c;transform:translateY(-2px)}
+.hero-voice-icon{width:35px;height:35px;flex-shrink:0;display:grid;place-items:center;border:1px solid #ffb46d55;border-radius:50%;background:#ffb46d14;color:#ffbe7c}
+.hero-voice-cta strong{display:block;font-size:13px;font-weight:600;letter-spacing:-.15px}.hero-voice-cta small{display:block;font-size:10px;color:#aeb3c1;margin-top:3px;line-height:1.6}
+.hero-voice-cta>svg{flex-shrink:0;color:#f1b374;margin-left:10px}
+.floating-actions .voice-launcher{display:flex;align-items:center;justify-content:center;gap:8px;width:auto;min-width:111px;padding:0 15px;border-radius:999px;background:linear-gradient(110deg,#30223e,#272a44);border:1px solid #c9a3ef80;color:#f5eafa;font-size:12px;font-weight:600;box-shadow:0 4px 24px #0005}
+.floating-actions .voice-launcher:hover{border-color:#f3c28b;background:#42314e}
+@media(max-width:760px){.hero-voice-cta{width:100%;padding:12px;gap:10px}.hero-voice-cta strong{font-size:12px}.hero-voice-cta small{font-size:9px}.hero-voice-cta>svg{margin-left:auto}.floating-actions .voice-launcher{min-width:104px;font-size:11px;padding:0 12px}}
+@media(max-width:380px){.nav-wrap{gap:9px}.nav-wrap .logo{font-size:20px}.nav-wrap .sun-logo{margin-right:6px;transform:scale(.9);transform-origin:left center}.nav-cta{font-size:9px;padding:8px}.nav-cta svg{width:12px}.menu-toggle svg{width:20px}.hero h1{font-size:38px;letter-spacing:-1.8px}}
