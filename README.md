@@ -32,6 +32,18 @@ Open http://localhost:5173. The development command runs both Vite and the enqui
 
 No FormSubmit activation, Formspree account, or form-provider endpoint is required. If the password is missing, the API returns a configuration error and the form preserves all input with email and Calendly alternatives. Incorrect credentials, a blocked SMTP connection, or a temporary Gmail failure also preserve the enquiry. Requests are not automatically retried because an interrupted request may already have reached Gmail.
 
+## Diagnose mail failures without sending an email
+
+Keep `npm run dev` running and open a second terminal in this project:
+
+```sh
+npm run mail:check
+```
+
+This sends one intentionally invalid enquiry to check the API and browser origin, then verifies Gmail's DNS/TLS connection and authentication without sending mail. It prints only safe diagnostic labels; no password or raw SMTP response is logged. The probe consumes one rate-limit slot. For a different site address, use `npm run mail:check -- http://127.0.0.1:5173` (use the exact origin you open in the browser).
+
+`EAUTH` means Gmail refused authentication; check the App Password belongs to `SMTP_USER`. `EDNS` indicates DNS resolution failure. Connection/time-out codes indicate a network or SMTP connection problem. `ORIGIN_NOT_ALLOWED` and `RATE_LIMITED` indicate the API refused the request before SMTP. Successful verification does not test recipient acceptance or inbox delivery. Restart development after changing `.env.server.local`; a running server keeps its previously loaded settings.
+
 ## Build and host
 
 ```sh
