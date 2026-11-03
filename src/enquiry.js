@@ -1,27 +1,20 @@
 /** A timeout is ambiguous: never retry a submission automatically. */
-export async function submitEnquiry(recipient, fields, { fetchImpl = fetch, timeoutMs = 12000 } = {}) {
+export async function submitEnquiry(fields, { fetchImpl = fetch, timeoutMs = 30000 } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetchImpl(`https://formsubmit.co/ajax/${encodeURIComponent(recipient)}`, {
+    const response = await fetchImpl('/api/enquiry', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        ...fields,
-        _subject: 'New SunriseAI website enquiry',
-        _template: 'table',
-        _replyto: fields.email,
-      }),
+      body: JSON.stringify(fields),
       signal: controller.signal,
     });
-
-    if (!response.ok) throw new Error('Submission could not be confirmed.');
     const result = await response.json();
-    // Activation and verification are provider prerequisites, not delivery success.
-    const needsActivation = /activat|confirm your email|verify your email|check your email/i.test(result?.message || '');
-    if ((result?.success !== true && result?.success !== 'true') || needsActivation) {
-      throw new Error('Submission could not be confirmed.');
+    if (!response.ok || result?.accepted !== true) {
+      const error = new Error('Submission could not be confirmed.');
+      if (result?.code === 'MAIL_NOT_CONFIGURED') error.code = 'MAIL_NOT_CONFIGURED';
+      throw error;
     }
     return { accepted: true };
   } finally {

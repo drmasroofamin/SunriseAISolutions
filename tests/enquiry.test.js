@@ -3,42 +3,42 @@ import assert from 'node:assert/strict';
 import { submitEnquiry, buildEmailDraft } from '../src/enquiry.js';
 
 const recipient = 'owner@example.com';
-const fields = { name: 'A & B', email: 'alex@example.com', company: 'Sun & Co', service: 'Custom AI & Knowledge', message: 'Line 1\nLine 2? 100% + ☀️' };
-const reply = (success, message = '') => async () => ({ ok: true, json: async () => ({ success, message }) });
+const fields = { name: 'A & B', email: 'alex@example.com', company: 'Sun & Co', service: 'Custom AI & Knowledge', message: 'Line 1\nLine 2? 100% + ☀️', website: '' };
+const reply = (body, ok = true) => async () => ({ ok, json: async () => body });
 
-test('requires an explicit positive service response and sends the entered fields', async () => {
+test('uses our own backend, sends only entered fields, and requires explicit acceptance', async () => {
   let sent;
   const fetchImpl = async (url, options) => {
     sent = { url, options };
-    return { ok: true, json: async () => ({ success: 'true', message: 'Form successfully submitted' }) };
+    return { ok: true, json: async () => ({ accepted: true }) };
   };
-  assert.deepEqual(await submitEnquiry(recipient, fields, { fetchImpl }), { accepted: true });
-  assert.equal(sent.url, 'https://formsubmit.co/ajax/owner%40example.com');
+  assert.deepEqual(await submitEnquiry(fields, { fetchImpl }), { accepted: true });
+  assert.equal(sent.url, '/api/enquiry');
   assert.equal(sent.options.method, 'POST');
-  const body = JSON.parse(sent.options.body);
-  for (const [key, value] of Object.entries(fields)) assert.equal(body[key], value);
-  assert.equal(body._replyto, fields.email);
-  assert.equal(body._captcha, undefined, 'does not disable provider verification');
-  assert.deepEqual(await submitEnquiry(recipient, fields, { fetchImpl: reply(true) }), { accepted: true });
+  assert.deepEqual(JSON.parse(sent.options.body), fields);
+  assert.equal(JSON.parse(sent.options.body).recipient, undefined);
 });
 
 for (const [name, fetchImpl] of [
-  ['522 HTML response', async () => ({ ok: false, status: 522, json: async () => { throw Error('HTML'); } })],
+  ['server outage', async () => ({ ok: false, json: async () => { throw Error('Unavailable'); } })],
   ['network failure', async () => { throw new TypeError('Failed to fetch'); }],
-  ['HTML returned with a 200 status', async () => ({ ok: true, json: async () => { throw new SyntaxError('HTML response'); } })],
-  ['provider rejection', reply(false)],
-  ['string rejection', reply('false')],
-  ['activation required', reply(true, 'Please activate your form')],
-  ['email verification required', reply('true', 'Check your email to continue')],
-  ['unrecognized response', async () => ({ ok: true, json: async () => ({ message: 'OK' }) })],
-  ['null response', async () => ({ ok: true, json: async () => null })],
+  ['static hosting without an API', async () => ({ ok: true, json: async () => { throw new SyntaxError('HTML response'); } })],
+  ['mail rejection', reply({ accepted: false }, false)],
+  ['string acceptance', reply({ accepted: 'true' })],
+  ['error status with positive body', reply({ accepted: true }, false)],
+  ['unrecognized response', reply({ success: true })],
+  ['null response', reply(null)],
 ]) {
   test(`${name} is unconfirmed and is not retried automatically`, async () => {
     let attempts = 0;
-    await assert.rejects(submitEnquiry(recipient, fields, { fetchImpl: (...args) => { attempts++; return fetchImpl(...args); } }));
+    await assert.rejects(submitEnquiry(fields, { fetchImpl: (...args) => { attempts++; return fetchImpl(...args); } }));
     assert.equal(attempts, 1);
   });
 }
+
+test('missing mail setup is identified separately for helpful on-page guidance', async () => {
+  await assert.rejects(submitEnquiry(fields, { fetchImpl: reply({ code: 'MAIL_NOT_CONFIGURED' }, false) }), { code: 'MAIL_NOT_CONFIGURED' });
+});
 
 test('a stalled request is aborted after the deadline', async () => {
   let attempts = 0;
@@ -46,7 +46,7 @@ test('a stalled request is aborted after the deadline', async () => {
     attempts++;
     signal.addEventListener('abort', () => reject(new DOMException('Timed out', 'AbortError')), { once: true });
   });
-  await assert.rejects(submitEnquiry(recipient, fields, { fetchImpl, timeoutMs: 10 }), { name: 'AbortError' });
+  await assert.rejects(submitEnquiry(fields, { fetchImpl, timeoutMs: 10 }), { name: 'AbortError' });
   assert.equal(attempts, 1);
 });
 

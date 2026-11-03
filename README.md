@@ -1,45 +1,79 @@
 # SunriseAI
 
-A responsive React 19 website with Vite, Tailwind CSS 4, Framer Motion, and Lucide icons.
+Responsive React website with Vite, Tailwind CSS, Framer Motion, and a Node.js enquiry backend. Booking uses the configured Calendly account. Enquiries are sent directly through Gmail SMTP; FormSubmit and Formspree are no longer used.
 
-## Development
+## Run on your PC
 
-Use the existing checkout at `/workspace/SunriseAISolutions`; cloud tasks are isolated, so no worktree is needed.
+Install Node.js 24 LTS and Git. From the checkout:
 
 ```sh
-npm ci --cache /tmp/sunrise-npm-cache
-npm run dev -- --port 5173
+npm ci
+npm run dev
 ```
 
-Run `npm run build` to create the production output in `dist`. `npm run preview -- --port 4173` serves the production build.
+Open http://localhost:5173. The development command runs both Vite and the enquiry backend; Ctrl+C stops both. Cloud tasks should use the existing checkout at `/workspace/SunriseAISolutions`. Tasks are isolated; do not create a worktree unless explicitly requested.
 
-## Before launch
+## Enable Gmail enquiry delivery
 
-The `config` object at the top of `src/main.jsx` holds the contact email, Calendly embed URL, WhatsApp number (international digits), and LinkedIn URL. The form uses FormSubmit for email delivery; see the activation instructions below. Never add private API keys to frontend code.
+1. Sign in to **sunrisesolution93@gmail.com** and enable **2-Step Verification** in Google Account → Security.
+2. Visit https://myaccount.google.com/apppasswords and create an App Password called `SunriseAI website`. If Google does not offer App Passwords, check the account's security settings or administrator restrictions; your ordinary Gmail password will not work here.
+3. Create your private server settings file (do not overwrite an existing configuration):
 
-Chat is an explicitly labeled local, rule-based demonstration. Voice calling and newsletter subscription need service integration. Booking renders the configured Calendly iframe. These external destinations may need additions to the environment's network policy.
+   ```sh
+   cp -n .env.example .env.server.local
+   chmod 600 .env.server.local
+   nano .env.server.local
+   ```
 
-All results, case studies, and testimonials are labeled placeholders. Pricing is discussed after a discovery call. Replace them with verified content before publishing. The founder graphic is a monogram, not a photograph. Add final canonical URL and Open Graph image once the production domain and social asset are available.
+4. Set `SMTP_USER=sunrisesolution93@gmail.com` and place the App Password after `SMTP_APP_PASSWORD=`. Keep `APP_ORIGIN` blank for local development. Save with Ctrl+O, Enter, then exit with Ctrl+X.
+5. Restart `npm run dev`. Submit an enquiry, then confirm it reaches the Gmail inbox or Spam folder. The website only reports acceptance after the mail server accepts the fixed recipient; this does not guarantee inbox placement.
 
-## Structure
+**Keep the App Password private.** Never paste it into chat, React code, or a GitHub commit. `.env.server.local` is ignored by Git and is loaded only by Node. No frontend variable should contain credentials; do not use `VITE_` for mail credentials.
 
-- `src/main.jsx`: reusable UI components, content, and interactions
-- `src/components/ContactForm.jsx`: accessible enquiry form and fallback links
-- `src/enquiry.js`: provider submission and email draft helpers
-- `tests/enquiry.test.js`: submission and fallback tests
-- `src/styles.css`: design tokens, layouts, responsive rules, and reduced motion support
-- `index.html`: page metadata
+No FormSubmit activation, Formspree account, or form-provider endpoint is required. If the password is missing, the API returns a configuration error and the form preserves all input with email and Calendly alternatives. Incorrect credentials, a blocked SMTP connection, or a temporary Gmail failure also preserve the enquiry. Requests are not automatically retried because an interrupted request may already have reached Gmail.
 
-No backend credentials or external services are required to run the local website.
+## Build and host
 
-## Booking and enquiry delivery
+```sh
+npm run build
+npm start
+```
 
-Booking buttons and the Calendly embed use https://calendly.com/sunrisesolution93/30min. The contact form uses FormSubmit's AJAX endpoint for enquiries to sunrisesolution93@gmail.com. It stays on the page, disables duplicate submission while pending, and stops waiting after 12 seconds. A provider error, invalid response, missing activation, or timeout shows an unconfirmed-submission message without clearing fields. It never retries automatically: a timed-out request may already have reached the provider. An accepted response confirms provider acceptance, not inbox delivery.
+Open http://localhost:3001. This serves both the production website and `/api/enquiry`. `npm run preview` runs the same production server. The server needs access to `smtp.gmail.com` over TLS on TCP port 465. It keeps TLS verification enabled.
 
-The Gmail and email-app alternatives carry all entered fields into a draft, independently of FormSubmit. The visitor must review and send that draft. Enquiry drafts are kept only in React memory; the website does not save them to browser storage.
+For a public deployment, use a host that runs a persistent Node.js process and permits outbound SMTP. Set these **server-side** environment variables in the host's private settings:
 
-FormSubmit requires mailbox activation. The mailbox owner must click its activation email before delivery is enabled; check spam too. Activation and anti-spam requirements depend on the provider; no CAPTCHA-disabling option or private keys are included in frontend code. Visitor enquiry details are processed by FormSubmit. If it returns a Cloudflare 522, its origin service is unavailable; the frontend cannot repair that outage. Confirm receipt from the deployed form after activation. Use direct email or Calendly while it is unavailable.
+- `SMTP_USER`: the configured Gmail account
+- `SMTP_APP_PASSWORD`: its App Password
+- `APP_ORIGIN`: the exact public origin, such as `https://your-domain.com`, without a path
+- `HOST=0.0.0.0` and the platform's required `PORT`
+
+Run the build during deployment and use `npm start` as the start command. Serve HTTPS through the hosting platform. Uploading only `dist/` to static hosting will not provide the enquiry API. A PC development server must remain running to process local enquiries; Gmail settings on your PC do not configure the deployed host.
+
+The default API development port is 3001. To change it, use `API_PORT=3002 npm run dev`; Vite will proxy `/api` to that port. If you change Vite's frontend port, configure `APP_ORIGIN` to match it. The backend rate limit is in memory and applies per connection IP, not untrusted forwarded headers; behind a reverse proxy, shared traffic can share a rate-limit bucket. Use platform abuse controls before scaling across instances.
+
+## Contact and content
+
+The `config` object in `src/main.jsx` holds the public email, Calendly URL, WhatsApp number, and LinkedIn URL. SMTP settings belong only in the server environment.
+
+The email-draft alternatives copy all entered fields to Gmail or the visitor's email app; the visitor must review and send that draft. Drafts are held in memory and are not persisted to browser storage. The website does not log enquiry contents or mail credentials.
+
+Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat is a local, rule-based demonstration; voice and newsletter services remain unconnected. Add a production canonical URL and social image when available.
 
 ## Validation
 
-Run `npm test` for 12 dependency-free checks covering provider responses, activation, timeouts, and encoded email fallbacks. Run `npm run build` for production validation. Browser validation uses intercepted responses to avoid sending live messages; it cannot establish that provider activation or email delivery works.
+```sh
+npm test
+npm run build
+```
+
+Tests exercise the frontend submission helper and the real HTTP API using an injected fake mail transport. They cover accepted and failed mail, missing configuration, invalid and oversized input, fixed sender/recipient rules, origin checks, rate limits, and email fallbacks without sending any real messages. Browser smoke checks also use simulated responses. Live Gmail authentication and inbox delivery require your private App Password and a real test after configuration.
+
+## Structure
+
+- `src/components/ContactForm.jsx`: enquiry fields, status, and email alternatives
+- `src/enquiry.js`: same-origin API submission and encoded email drafts
+- `server/`: validated enquiry API, SMTP configuration, and production static server
+- `scripts/dev.mjs`: starts both development processes
+- `src/main.jsx` and `src/styles.css`: site content, components, and responsive styling
+- `tests/`: frontend helper and backend tests

@@ -21,3 +21,4 @@ main{overflow:clip}.hero-glow{pointer-events:none}
 .enquiry-links{display:flex;gap:17px;flex-wrap:wrap}
 .enquiry-links a{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#e7b88d;padding:4px 0}
 .enquiry-alternatives small{font-size:10px;line-height:1.8;color:#969eae;overflow-wrap:anywhere}
+.enquiry-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}

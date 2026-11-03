@@ -4,21 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
+    "dev": "node scripts/dev.mjs",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "test": "node tests/enquiry.test.js"
+    "preview": "npm start",
+    "test": "node tests/enquiry.test.js && node tests/server.test.js",
+    "start": "node --env-file-if-exists=.env.server.local server/index.js"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
     "framer-motion": "^12.0.0",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "nodemailer": "^10.3.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "vite": "^6.1.0",
-    "tailwindcss": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
-    "@vitejs/plugin-react": "^4.3.4"
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "vite": "^6.1.0"
+  },
+  "engines": {
+    "node": ">=22.9.0"
   }
 }
