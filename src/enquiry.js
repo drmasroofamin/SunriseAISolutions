@@ -1,5 +1,5 @@
 /** A timeout is ambiguous: never retry a submission automatically. */
-export async function submitEnquiry(fields, { fetchImpl = fetch, timeoutMs = 30000 } = {}) {
+export async function submitEnquiry(fields, { fetchImpl = fetch, timeoutMs = 30000, signal } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -8,7 +8,7 @@ export async function submitEnquiry(fields, { fetchImpl = fetch, timeoutMs = 300
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify(fields),
-      signal: controller.signal,
+      signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal,
     });
     const result = await response.json();
     if (!response.ok || result?.accepted !== true) {

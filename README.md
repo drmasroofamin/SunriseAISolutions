@@ -52,6 +52,18 @@ The assistant uses server-owned SunriseAI information and directs interested vis
 
 `GET /api/chat/status` reports only whether a key is configured, not whether it is valid or the project has credits. Missing configuration, invalid credentials, quota limits, slow requests, and connection failures show honest unavailable/retry states while keeping the visitor's message. If setup fails, inspect the `/api/chat` response in the browser's Network panel: `AI_AUTH_FAILED` indicates rejected credentials/access; `AI_QUOTA_EXCEEDED` indicates insufficient API quota; `AI_BUSY` or `RATE_LIMITED` indicate a temporary limit. Share only that code, never the key. Live AI replies require your own private key and must be checked after configuration.
 
+## Website voice consultation
+
+The **Talk to our AI voice agent** button opens a guided website conversation. It welcomes the visitor, asks what they need, then collects their name, contact email and company/niche one step at a time. Answers can be spoken with push-to-talk or typed. Recognized speech is shown for review; the email address must be checked on screen. After reviewing the details, the visitor requests a short AI explanation of practical ways the solution could help their business, followed by an invitation to a detailed discovery call.
+
+This uses the existing `OPENAI_API_KEY` and `OPENAI_MODEL`; no new provider account is needed. A recommendation uses a separate `/api/voice/solution` route and at most 350 output tokens. It is independent of the text assistant's instant booking handoff. The visitor's **requirement and niche** are the only structured fields sent to OpenAI. Do not enter sensitive information in those fields. Dedicated name/email fields remain in browser memory until the visitor explicitly submits a follow-up enquiry using the existing Gmail backend.
+
+Speech input uses the browser's SpeechRecognition/WebKit implementation, and replies use browser speech synthesis. Browser speech providers may process audio, so the modal discloses that before listening. This is not an OpenAI audio/realtime endpoint, phone number, or inbound/outbound calling integration. Chrome/Edge on localhost or a deployed HTTPS origin are recommended; browser/OS support, microphone permission, voice availability, and speech-service connectivity vary. A typed flow and visible text remain available when speech is unsupported or denied. Closing the modal stops speech/listening and aborts its requests. No raw audio is stored by this website.
+
+The visitor can choose a time through the Calendly button. No appointment is booked automatically. Contact details are emailed only after clicking **Send my details to SunriseAI**, with confirmation only after SMTP acceptance. Actual inbox receipt must be checked separately. Voice recommendation requests have their own limit of five per connection IP per 15 minutes. API quota/authentication/network failures show honest retry states and preserve the reviewed details.
+
+Automated checks use fake speech, AI, and mail services. Real microphone recognition and audible playback must be checked on the target PC/browser; live recommendations and email require the existing private account settings.
+
 ## Booking-first assistant and lead capture
 
 Clear service requests such as “I need an AI bot for WhatsApp” immediately show the Calendly booking link and a short follow-up form. The visitor can choose any available meeting time or provide their contact email and company/niche (name is optional). The form explains the intended team contact before the visitor clicks **Send contact details**. The initial requirement is included with the enquiry sent through the existing Gmail backend.
@@ -110,7 +122,7 @@ The `config` object in `src/main.jsx` holds the public email, Calendly URL, What
 
 The email-draft alternatives copy all entered fields to Gmail or the visitor's email app; the visitor must review and send that draft. Drafts are held in memory and are not persisted to browser storage. The website does not log enquiry contents or mail credentials.
 
-Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; voice and newsletter services remain unconnected. Add a production canonical URL and social image when available.
+Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; the website voice consultation uses browser speech and OpenAI; newsletter delivery remains unconnected. Add a production canonical URL and social image when available.
 
 ## Validation
 

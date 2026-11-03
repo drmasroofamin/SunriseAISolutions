@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { validateChatMessages } from './chat.js';
+import { validateVoiceRequest } from './voice.js';
 import { getChatHandoff } from '../shared/chat-handoff.js';
 
 const EMAIL = /^[^\s@<>,;"\r\n]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -71,6 +72,7 @@ export function validateEnquiry(body) {
 export function createApp({
   sendMail,
   chatReply,
+  voiceReply,
   sender,
   recipient = 'sunrisesolution93@gmail.com',
   appOrigin,
@@ -78,6 +80,7 @@ export function createApp({
   maxBodyBytes = 32768,
   rateLimit = { max: 5, windowMs: 15 * 60 * 1000, maxClients: 10000 },
   chatRateLimit = { max: 20, windowMs: 15 * 60 * 1000, maxClients: 10000 },
+  voiceRateLimit = { max: 5, windowMs: 15 * 60 * 1000, maxClients: 10000 },
   now = Date.now,
 } = {}) {
   if (sender && !EMAIL.test(sender)) throw new Error('Invalid SMTP_USER email address.');
@@ -85,6 +88,7 @@ export function createApp({
   const origins = new Set(appOrigin ? [new URL(appOrigin).origin] : DEFAULT_ORIGINS);
   const clients = new Map();
   const chatClients = new Map();
+  const voiceClients = new Map();
   const configured = typeof sendMail === 'function' && Boolean(sender);
 
   function allowClient(address, bucket = clients, policy = rateLimit) {
@@ -142,7 +146,8 @@ export function createApp({
         return json(response, 200, { configured: typeof chatReply === 'function' });
       }
       const isChat = pathname === '/api/chat';
-      if (pathname !== '/api/enquiry' && !isChat) {
+      const isVoice = pathname === '/api/voice/solution';
+      if (pathname !== '/api/enquiry' && !isChat && !isVoice) {
         if (pathname.startsWith('/api/')) return json(response, 404, { code: 'NOT_FOUND' });
         return await staticFile(request, response, pathname);
       }
@@ -152,13 +157,27 @@ export function createApp({
       if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') {
         return json(response, 415, { code: 'JSON_REQUIRED' });
       }
-      const policy = isChat ? chatRateLimit : rateLimit;
-      if (!allowClient(request.socket.remoteAddress || 'unknown', isChat ? chatClients : clients, policy)) {
+      const policy = isVoice ? voiceRateLimit : isChat ? chatRateLimit : rateLimit;
+      if (!allowClient(request.socket.remoteAddress || 'unknown', isVoice ? voiceClients : isChat ? chatClients : clients, policy)) {
         return json(response, 429, { code: 'RATE_LIMITED' }, { 'Retry-After': String(Math.ceil(policy.windowMs / 1000)) });
       }
       let body;
       try { body = await readJson(request, maxBodyBytes); }
       catch (error) { return json(response, error.status || 400, { code: 'INVALID_REQUEST' }); }
+      if (isVoice) {
+        const fields = validateVoiceRequest(body);
+        if (!fields) return json(response, 400, { code: 'INVALID_VOICE_REQUEST' });
+        if (typeof voiceReply !== 'function') return json(response, 503, { code: 'AI_NOT_CONFIGURED' });
+        try {
+          const result = await voiceReply(fields);
+          if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 3500) return json(response, 502, { code: 'AI_UNAVAILABLE' });
+          return json(response, 200, { reply: result.reply });
+        } catch (error) {
+          const statuses = { AI_NOT_CONFIGURED: 503, AI_BUSY: 429, AI_TIMEOUT: 504, AI_UNAVAILABLE: 502, AI_AUTH_FAILED: 503, AI_QUOTA_EXCEEDED: 503, AI_MODEL_UNAVAILABLE: 503 };
+          const code = Object.hasOwn(statuses, error?.code) ? error.code : 'AI_UNAVAILABLE';
+          return json(response, statuses[code], { code });
+        }
+      }
       if (isChat) {
         const messages = validateChatMessages(body);
         if (!messages) return json(response, 400, { code: 'INVALID_CHAT_REQUEST' });

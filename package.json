@@ -7,7 +7,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "vite build",
     "preview": "npm start",
-    "test": "node tests/enquiry.test.js && node tests/server.test.js && node tests/mail-check.test.js && node tests/chat.test.js && node tests/chat-client.test.js && node tests/chat-api.test.js && node tests/ai-check.test.js && node tests/chat-handoff.test.js",
+    "test": "node tests/enquiry.test.js && node tests/server.test.js && node tests/mail-check.test.js && node tests/chat.test.js && node tests/chat-client.test.js && node tests/chat-api.test.js && node tests/ai-check.test.js && node tests/chat-handoff.test.js && node tests/voice.test.js && node tests/voice-flow.test.js && node tests/voice-client.test.js && node tests/voice-api.test.js",
     "start": "node --env-file-if-exists=.env.server.local server/index.js",
     "mail:check": "node --env-file-if-exists=.env.server.local scripts/check-mail.mjs",
     "ai:check": "node --env-file-if-exists=.env.server.local scripts/check-ai.mjs"

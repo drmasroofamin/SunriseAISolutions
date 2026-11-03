@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import nodemailer from 'nodemailer';
 import { createApp } from './app.js';
 import { createChatReply } from './chat.js';
+import { createVoiceReply } from './voice.js';
 
 const sender = process.env.SMTP_USER?.trim();
 const password = process.env.SMTP_APP_PASSWORD?.replace(/\s/g, '');
@@ -41,6 +42,7 @@ const sendMail = configured ? async message => {
 const app = createApp({
   sendMail,
   chatReply: process.env.OPENAI_API_KEY?.trim() ? createChatReply({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-4.1-mini' }) : undefined,
+  voiceReply: process.env.OPENAI_API_KEY?.trim() ? createVoiceReply({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-4.1-mini' }) : undefined,
   sender,
   recipient,
   appOrigin: process.env.APP_ORIGIN,
