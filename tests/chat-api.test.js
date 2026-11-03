@@ -4,9 +4,9 @@ import { createServer } from 'node:http';
 import { createApp } from '../server/app.js';
 
 const messages = [
-  { role: 'user', content: 'I want an AI bot.' },
-  { role: 'assistant', content: 'What should the bot help your customers with?' },
-  { role: 'user', content: 'Book clinic appointments.' },
+  { role: 'user', content: 'What is a knowledge assistant?' },
+  { role: 'assistant', content: 'It answers questions from approved information.' },
+  { role: 'user', content: 'How does it find its answers?' },
 ];
 
 async function withApp(options, run) {
@@ -117,4 +117,21 @@ test('chat and mail rate limits are independent and forwarded addresses cannot b
     assert.equal(chatCalls, 2);
     assert.equal(mailCalls, 1);
   });
+});
+
+
+test('service interest returns a booking handoff before AI configuration or provider calls', async () => {
+  for (const configured of [false, true]) {
+    let calls = 0;
+    await withApp(configured ? { chatReply: async () => { calls++; throw Error('must not call'); } } : {}, async ({ post }) => {
+      const response = await post({ messages: [{ role: 'user', content: 'I need an AI bot for WhatsApp' }] });
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.showLeadForm, true);
+      assert.equal(result.request, 'I need an AI bot for WhatsApp');
+      assert.ok(result.reply.includes('https://calendly.com/sunrisesolution93/30min'));
+      assert.ok(result.reply.includes('email and company/niche'));
+      assert.equal(calls, 0);
+    });
+  }
 });

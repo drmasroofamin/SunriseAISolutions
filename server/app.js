@@ -2,6 +2,7 @@ import { createReadStream } from 'node:fs';
 import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { validateChatMessages } from './chat.js';
+import { getChatHandoff } from '../shared/chat-handoff.js';
 
 const EMAIL = /^[^\s@<>,;"\r\n]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const MIME = {
@@ -161,11 +162,13 @@ export function createApp({
       if (isChat) {
         const messages = validateChatMessages(body);
         if (!messages) return json(response, 400, { code: 'INVALID_CHAT_REQUEST' });
+        const handoff = getChatHandoff(messages);
+        if (handoff) return json(response, 200, handoff);
         if (typeof chatReply !== 'function') return json(response, 503, { code: 'AI_NOT_CONFIGURED' });
         try {
           const result = await chatReply(messages);
           if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 6000) return json(response, 502, { code: 'AI_UNAVAILABLE' });
-          return json(response, 200, { reply: result.reply });
+          return json(response, 200, { reply: result.reply, ...(result.showLeadForm === true ? { showLeadForm: true, request: String(result.request || '').slice(0, 2000) } : {}) });
         } catch (error) {
           const statuses = { AI_NOT_CONFIGURED: 503, AI_BUSY: 429, AI_TIMEOUT: 504, AI_UNAVAILABLE: 502, AI_AUTH_FAILED: 503, AI_QUOTA_EXCEEDED: 503, AI_MODEL_UNAVAILABLE: 503 };
           const code = Object.hasOwn(statuses, error?.code) ? error.code : 'AI_UNAVAILABLE';

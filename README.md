@@ -48,9 +48,17 @@ Never put the key in React, a `VITE_` variable, a Git commit, or chat. `.env.ser
 
 Both chat widgets share the same conversation in memory, with recent turns sent for context; reset clears the local conversation. Responses come from OpenAI, not scripted replies. The request uses the Responses API, `store: false`, at most 500 output tokens, a 25-second backend timeout, and no automatic retries. Chat requests have a separate in-memory rate limit (20 requests per connection IP per 15 minutes) so they do not consume the mail limit. As with mail, clients behind one reverse proxy share a bucket; use your host's abuse controls for a larger public deployment. API usage is charged to your OpenAI project.
 
-The assistant uses server-owned SunriseAI information, asks relevant follow-up questions, and directs ready visitors to Calendly or email. It has no tools for booking appointments or sending messages. Replies can still be inaccurate. The widgets disclose OpenAI processing and advise visitors to avoid sensitive data; the website does not persist transcripts or log their contents. OpenAI's own data handling policies still apply.
+The assistant uses server-owned SunriseAI information and directs interested visitors immediately to Calendly or a separate contact form. It cannot itself book appointments or send messages; the separate form sends an enquiry only after the visitor submits it. Replies can still be inaccurate. The widgets disclose OpenAI processing and advise visitors to avoid sensitive data; the website does not persist transcripts or log their contents. OpenAI's own data handling policies still apply.
 
 `GET /api/chat/status` reports only whether a key is configured, not whether it is valid or the project has credits. Missing configuration, invalid credentials, quota limits, slow requests, and connection failures show honest unavailable/retry states while keeping the visitor's message. If setup fails, inspect the `/api/chat` response in the browser's Network panel: `AI_AUTH_FAILED` indicates rejected credentials/access; `AI_QUOTA_EXCEEDED` indicates insufficient API quota; `AI_BUSY` or `RATE_LIMITED` indicate a temporary limit. Share only that code, never the key. Live AI replies require your own private key and must be checked after configuration.
+
+## Booking-first assistant and lead capture
+
+Clear service requests such as “I need an AI bot for WhatsApp” immediately show the Calendly booking link and a short follow-up form. The visitor can choose any available meeting time or provide their contact email and company/niche (name is optional). The form explains the intended team contact before the visitor clicks **Send contact details**. The initial requirement is included with the enquiry sent through the existing Gmail backend.
+
+These intent matches run locally and are enforced on the backend too; no OpenAI call or AI credit is used for the handoff. General informational questions still use OpenAI. The handoff replaces the chat composer with booking/contact options to avoid a long qualification conversation. **Start a new conversation** returns to normal chat. The embedded and floating widgets share both the conversation and form fields, and only one lead submission can run at a time.
+
+Simply typing into chat or filling the contact fields does not send email. A successful SMTP acceptance displays confirmation; a failure preserves the fields and offers booking/email alternatives. Contact-form fields are sent to the SunriseAI team, not to OpenAI. General chat is still processed by OpenAI as disclosed. Confirm actual Gmail receipt when testing the updated site; automated tests use fake mail delivery.
 
 ## Diagnose an AI request limit
 

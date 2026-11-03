@@ -36,3 +36,16 @@ main{overflow:clip}.hero-glow{pointer-events:none}
 .chat-privacy{display:block;font-size:8px;color:#949bab;line-height:1.7;margin-top:9px}
 .live-chat.compact .messages{height:210px}
 @media(max-width:760px){.live-chat .messages{height:230px}.live-chat .chat-notice p{font-size:11px}.live-chat.compact .messages{height:min(210px,28dvh)}.floating-chat .live-chat{max-height:calc(100dvh - 95px);overflow-y:auto}.chat-privacy{font-size:9px}}
+/* Booking-first handoff: ask for only the details needed for a team follow-up. */
+.live-chat.has-handoff .messages,.live-chat.has-handoff.compact .messages{height:135px}
+.chat-handoff{margin-top:12px}.chat-book-button{width:100%;white-space:normal;font-size:11px;padding:11px 9px}
+.chat-widget .chat-lead-form{display:block;background:none;border:0;border-top:1px solid #ffffff13;border-radius:0;padding:14px 0 0;margin-top:15px}
+.chat-lead-form h4{font-size:12px;margin-bottom:12px;letter-spacing:0}
+.chat-lead-form fieldset{display:flex;flex-direction:column;gap:10px;border:0;padding:0;margin:0;min-width:0}
+.chat-lead-form label{display:flex;flex-direction:column;font-size:10px;color:#b7becb;gap:5px}.chat-lead-form label span{font-size:8px;color:#8992a4}
+.chat-widget .chat-lead-form input{border:1px solid #ffffff1c;background:#0b0f1a66;border-radius:5px;color:#e7eaf0;padding:9px;width:100%;font-size:12px;outline:none}
+.chat-widget .chat-lead-form input:focus{border-color:#efad6f}
+.chat-widget .chat-lead-form button{width:100%;display:flex;gap:7px;align-items:center;justify-content:center;padding:10px;font-size:11px;border-radius:5px}
+.chat-lead-form .chat-lead-consent{font-size:8px;color:#929bad;line-height:1.7;margin:9px 0 0}
+.chat-lead-form .chat-lead-success,.chat-lead-form .chat-lead-error{font-size:10px;line-height:1.7;border:1px solid #89c79e35;border-radius:5px;padding:10px;margin:10px 0 0;color:#b9dcc5}
+.chat-lead-form .chat-lead-error{color:#e4bfa0;border-color:#e4a96c35}

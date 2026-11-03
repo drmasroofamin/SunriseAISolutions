@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { buildChatHistory, requestChatReply } from '../chat';
+import { getChatHandoff } from '../../shared/chat-handoff';
+import { submitEnquiry } from '../enquiry';
 
 const ChatContext = createContext(null);
 export function useChat() { return useContext(ChatContext); }
@@ -12,6 +14,10 @@ export function ChatProvider({ children }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
   const [availability, setAvailability] = useState('loading');
+  const [leadRequest, setLeadRequest] = useState('');
+  const [leadFields, setLeadFields] = useState({ name: '', email: '', company: '' });
+  const [leadStatus, setLeadStatus] = useState('idle');
+  const leadInFlight = useRef(false);
   const inFlight = useRef(false);
   const nextId = useRef(0);
 
@@ -34,7 +40,10 @@ export function ChatProvider({ children }) {
 
   async function send(text) {
     const content = text.trim();
-    if (inFlight.current || availability !== 'ready' || !content || content.length > 2000) return;
+    if (inFlight.current || leadInFlight.current || !content || content.length > 2000) return;
+    const history = buildChatHistory(messages, content);
+    const localHandoff = getChatHandoff(history);
+    if (availability !== 'ready' && !localHandoff) { setError('AI_NOT_CONFIGURED'); return; }
     inFlight.current = true;
     setPending(true);
     setError('');
@@ -42,8 +51,9 @@ export function ChatProvider({ children }) {
     const user = { id: ++nextId.current, role: 'user', content };
     setPendingMessage(user);
     try {
-      const reply = await requestChatReply(buildChatHistory(messages, content));
-      setMessages(previous => [...previous.slice(-58), user, { id: ++nextId.current, role: 'assistant', content: reply }]);
+      const result = localHandoff || await requestChatReply(history);
+      setMessages(previous => [...previous.slice(-58), user, { id: ++nextId.current, role: 'assistant', content: result.reply }]);
+      if (result.showLeadForm) { setLeadRequest(result.request || content); setLeadStatus('idle'); }
       setPendingMessage(null);
     } catch (failure) {
       setDraft(content);
@@ -55,12 +65,32 @@ export function ChatProvider({ children }) {
     }
   }
 
-  function reset() {
-    if (inFlight.current) return;
-    setMessages([]); setPendingMessage(null); setError(''); setDraft('');
+  async function sendLead(event) {
+    event.preventDefault();
+    if (leadInFlight.current || !leadRequest || leadStatus === 'accepted') return;
+    leadInFlight.current = true;
+    setLeadStatus('sending');
+    try {
+      await submitEnquiry({
+        name: leadFields.name.trim() || 'Chat visitor',
+        email: leadFields.email.trim(), company: leadFields.company.trim(),
+        service: 'AI consultation',
+        message: `Consultation requested through Sunrise assistant.\nRequested solution: ${leadRequest}`,
+        website: '',
+      });
+      setLeadStatus('accepted');
+    } catch (failure) {
+      setLeadStatus(failure.code === 'MAIL_NOT_CONFIGURED' ? 'unconfigured' : 'error');
+    } finally { leadInFlight.current = false; }
   }
 
-  return <ChatContext.Provider value={{ messages, draft, setDraft, pendingMessage, pending, error, availability, send, reset, refreshStatus }}>
+  function reset() {
+    if (inFlight.current || leadInFlight.current) return;
+    setMessages([]); setPendingMessage(null); setError(''); setDraft('');
+    setLeadRequest(''); setLeadFields({ name: '', email: '', company: '' }); setLeadStatus('idle');
+  }
+
+  return <ChatContext.Provider value={{ messages, draft, setDraft, pendingMessage, pending, error, availability, send, reset, refreshStatus, leadRequest, leadFields, setLeadFields, leadStatus, sendLead }}>
     {children}
   </ChatContext.Provider>;
 }

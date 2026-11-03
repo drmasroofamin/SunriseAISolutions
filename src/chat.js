@@ -21,6 +21,6 @@ export async function requestChatReply(messages, { fetchImpl = fetch, timeoutMs 
       error.code = allowed.includes(result?.code) ? result.code : 'AI_UNAVAILABLE';
       throw error;
     }
-    return result.reply;
+    return { reply: result.reply, showLeadForm: result.showLeadForm === true, request: typeof result.request === 'string' ? result.request.slice(0, 2000) : '' };
   } finally { clearTimeout(timer); }
 }

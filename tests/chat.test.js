@@ -4,9 +4,9 @@ import { createChatReply, validateChatMessages } from '../server/chat.js';
 import { classifyOpenAIError } from '../server/openai-error.js';
 
 const history = [
-  { role: 'user', content: 'I want an AI bot.' },
-  { role: 'assistant', content: 'What would you like it to help customers with?' },
-  { role: 'user', content: 'Book appointments for my clinic.' },
+  { role: 'user', content: 'What is a knowledge assistant?' },
+  { role: 'assistant', content: 'It helps people find answers in approved information.' },
+  { role: 'user', content: 'How does it find an answer?' },
 ];
 const validResponse = text => ({ ok: true, status: 200, json: async () => ({ status: 'completed', output: [
   { type: 'message', role: 'assistant', content: [{ type: 'output_text', text }] },
@@ -143,4 +143,30 @@ test('missing or inaccessible model is distinct from transient service unavailab
   const body = { error: { code: 'model_not_found', type: 'invalid_request_error', message: 'private-project-detail' } };
   assert.deepEqual(classifyOpenAIError(404, body), { status: 503, code: 'AI_MODEL_UNAVAILABLE', providerCode: 'model_not_found', providerType: 'invalid_request_error' });
   await assert.rejects(createChatReply({ apiKey: 'test', fetchImpl: async () => ({ ok: false, status: 404, json: async () => body }) })(history), { status: 503, code: 'AI_MODEL_UNAVAILABLE', message: 'AI_MODEL_UNAVAILABLE' });
+});
+
+
+test('solution interest hands off immediately even without an API key, without a paid request', async () => {
+  let calls = 0;
+  const response = await createChatReply({ fetchImpl: async () => { calls++; throw Error('must not call'); } })([{ role: 'user', content: 'I need an AI bot for WhatsApp.' }]);
+  assert.equal(response.showLeadForm, true);
+  assert.equal(response.request, 'I need an AI bot for WhatsApp.');
+  assert.ok(response.reply.includes('https://calendly.com/sunrisesolution93/30min'));
+  assert.ok(response.reply.includes('email and company/niche'));
+  assert.equal(calls, 0);
+});
+
+test('contact details typed after a handoff are directed to explicit form submission, not sent to the model', async () => {
+  let calls = 0;
+  const reply = createChatReply({ apiKey: 'test', fetchImpl: async () => { calls++; throw Error('must not call'); } });
+  const first = await reply([{ role: 'user', content: 'Build an AI bot' }]);
+  const followup = await reply([
+    { role: 'user', content: 'Build an AI bot' },
+    { role: 'assistant', content: first.reply },
+    { role: 'user', content: 'alex@example.com, education company' },
+  ]);
+  assert.equal(followup.showLeadForm, true);
+  assert.equal(followup.request, 'Build an AI bot');
+  assert.ok(followup.reply.includes('Typing them into chat has not sent an enquiry'));
+  assert.equal(calls, 0);
 });

@@ -35,8 +35,13 @@ test('posts bounded history to the same-origin endpoint and extracts a real repl
   } });
   assert.equal(sent.url, '/api/chat');
   assert.deepEqual(JSON.parse(sent.options.body), { messages });
-  assert.equal(reply, 'Which tasks should it handle?');
+  assert.deepEqual(reply, { reply: 'Which tasks should it handle?', showLeadForm: false, request: '' });
   assert.equal(sent.options.headers.Authorization, undefined);
+});
+
+test('keeps bounded handoff metadata separate from generated reply text', async () => {
+  const result = await requestChatReply([{ role: 'user', content: 'I need a WhatsApp bot' }], { fetchImpl: async () => ({ ok: true, json: async () => ({ reply: 'Please book a call or use the form below.', showLeadForm: true, request: 'I need a WhatsApp bot', private: 'ignored' }) }) });
+  assert.deepEqual(result, { reply: 'Please book a call or use the form below.', showLeadForm: true, request: 'I need a WhatsApp bot' });
 });
 
 for (const [code, status] of [['AI_NOT_CONFIGURED', 503], ['AI_BUSY', 429], ['RATE_LIMITED', 429], ['AI_TIMEOUT', 504], ['AI_AUTH_FAILED', 503], ['AI_QUOTA_EXCEEDED', 503]]) {
