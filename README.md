@@ -32,6 +32,26 @@ Open http://localhost:5173. The development command runs both Vite and the enqui
 
 No FormSubmit activation, Formspree account, or form-provider endpoint is required. If the password is missing, the API returns a configuration error and the form preserves all input with email and Calendly alternatives. Incorrect credentials, a blocked SMTP connection, or a temporary Gmail failure also preserve the enquiry. Requests are not automatically retried because an interrupted request may already have reached Gmail.
 
+## Enable the Sunrise AI assistant
+
+1. Create an API key at https://platform.openai.com/api-keys. Your OpenAI Platform project must have API billing/credits and access to the selected model. A ChatGPT subscription does not include API usage.
+2. Open the existing private `.env.server.local` file. Preserve the Gmail settings and add:
+
+   ```text
+   OPENAI_API_KEY=replace_with_your_real_api_key
+   OPENAI_MODEL=gpt-4.1-mini
+   ```
+
+3. Restart `npm run dev`, open the assistant, and try “I want to build an AI bot”. Follow up with your industry and a task so you can verify it remembers the conversation.
+
+Never put the key in React, a `VITE_` variable, a Git commit, or chat. `.env.server.local` stays ignored. For a deployed website, set these variables privately on the Node.js host and restart it. The server needs HTTPS access to `api.openai.com`.
+
+Both chat widgets share the same conversation in memory, with recent turns sent for context; reset clears the local conversation. Responses come from OpenAI, not scripted replies. The request uses the Responses API, `store: false`, at most 500 output tokens, a 25-second backend timeout, and no automatic retries. Chat requests have a separate in-memory rate limit (20 requests per connection IP per 15 minutes) so they do not consume the mail limit. As with mail, clients behind one reverse proxy share a bucket; use your host's abuse controls for a larger public deployment. API usage is charged to your OpenAI project.
+
+The assistant uses server-owned SunriseAI information, asks relevant follow-up questions, and directs ready visitors to Calendly or email. It has no tools for booking appointments or sending messages. Replies can still be inaccurate. The widgets disclose OpenAI processing and advise visitors to avoid sensitive data; the website does not persist transcripts or log their contents. OpenAI's own data handling policies still apply.
+
+`GET /api/chat/status` reports only whether a key is configured, not whether it is valid or the project has credits. Missing configuration, invalid credentials, quota limits, slow requests, and connection failures show honest unavailable/retry states while keeping the visitor's message. If setup fails, inspect the `/api/chat` response in the browser's Network panel: `AI_AUTH_FAILED` indicates rejected credentials/access; `AI_QUOTA_EXCEEDED` indicates insufficient API quota; `AI_BUSY` or `RATE_LIMITED` indicate a temporary limit. Share only that code, never the key. Live AI replies require your own private key and must be checked after configuration.
+
 ## Diagnose mail failures without sending an email
 
 Keep `npm run dev` running and open a second terminal in this project:
@@ -70,7 +90,7 @@ The `config` object in `src/main.jsx` holds the public email, Calendly URL, What
 
 The email-draft alternatives copy all entered fields to Gmail or the visitor's email app; the visitor must review and send that draft. Drafts are held in memory and are not persisted to browser storage. The website does not log enquiry contents or mail credentials.
 
-Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat is a local, rule-based demonstration; voice and newsletter services remain unconnected. Add a production canonical URL and social image when available.
+Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; voice and newsletter services remain unconnected. Add a production canonical URL and social image when available.
 
 ## Validation
 
@@ -79,10 +99,12 @@ npm test
 npm run build
 ```
 
-Tests exercise the frontend submission helper and the real HTTP API using an injected fake mail transport. They cover accepted and failed mail, missing configuration, invalid and oversized input, fixed sender/recipient rules, origin checks, rate limits, and email fallbacks without sending any real messages. Browser smoke checks also use simulated responses. Live Gmail authentication and inbox delivery require your private App Password and a real test after configuration.
+Tests exercise the frontend submission helpers and real HTTP APIs using injected fake mail and AI providers. They cover accepted and failed mail, missing configuration, invalid and oversized input, fixed sender/recipient rules, origin checks, rate limits, and email fallbacks without sending any real messages. Browser smoke checks also use simulated responses. Live Gmail authentication and inbox delivery require your private App Password and a real test after configuration.
 
 ## Structure
 
+- `src/components/Chat.jsx` and `ChatContext.jsx`: shared AI conversation and accessible widgets
+- `server/chat.js`: grounded OpenAI integration, validation, and error handling
 - `src/components/ContactForm.jsx`: enquiry fields, status, and email alternatives
 - `src/enquiry.js`: same-origin API submission and encoded email drafts
 - `server/`: validated enquiry API, SMTP configuration, and production static server

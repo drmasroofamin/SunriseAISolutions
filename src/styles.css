@@ -22,3 +22,17 @@ main{overflow:clip}.hero-glow{pointer-events:none}
 .enquiry-links a{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#e7b88d;padding:4px 0}
 .enquiry-alternatives small{font-size:10px;line-height:1.8;color:#969eae;overflow-wrap:anywhere}
 .enquiry-honeypot{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
+/* Shared, live AI chat with readable replies and honest connection states. */
+.live-chat .messages{height:240px}.live-chat .messages p{white-space:pre-wrap;overflow-wrap:anywhere}
+.chat-reset{margin-left:auto;background:none;border:1px solid #ffffff18;border-radius:5px;padding:6px;color:#adb3c0;display:grid;place-items:center}
+.live-chat button:disabled{opacity:.45;cursor:default}.live-chat input:disabled{opacity:.65}
+.live-chat .quick-replies{flex-wrap:wrap}.chat-thinking{display:flex;align-items:center;gap:8px}
+.chat-spinner{animation:chat-spin 1s linear infinite}@keyframes chat-spin{to{transform:rotate(360deg)}}
+.chat-notice{padding:11px;background:#e9a05b0a;border:1px solid #e9a05b25;border-radius:6px;margin:10px 0}
+.chat-notice p{font-size:10px;line-height:1.8;color:#d9bea3;margin:0 0 7px}
+.chat-notice button{background:none;border:0;padding:2px 0;color:#f1bd89;font-size:10px;text-decoration:underline;text-underline-offset:3px}
+.chat-links{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-top:12px;font-size:9px;color:#e1b286}
+.chat-links a{display:inline-flex;align-items:center;gap:5px}.chat-links a:hover{text-decoration:underline}
+.chat-privacy{display:block;font-size:8px;color:#949bab;line-height:1.7;margin-top:9px}
+.live-chat.compact .messages{height:210px}
+@media(max-width:760px){.live-chat .messages{height:230px}.live-chat .chat-notice p{font-size:11px}.live-chat.compact .messages{height:min(210px,28dvh)}.floating-chat .live-chat{max-height:calc(100dvh - 95px);overflow-y:auto}.chat-privacy{font-size:9px}}

@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs';
 import { realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { validateChatMessages } from './chat.js';
 
 const EMAIL = /^[^\s@<>,;"\r\n]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const MIME = {
@@ -68,31 +69,34 @@ export function validateEnquiry(body) {
 /** Returns a request handler. Inject sendMail for tests; never send to a visitor-selected address. */
 export function createApp({
   sendMail,
+  chatReply,
   sender,
   recipient = 'sunrisesolution93@gmail.com',
   appOrigin,
   staticDir = path.resolve('dist'),
   maxBodyBytes = 32768,
   rateLimit = { max: 5, windowMs: 15 * 60 * 1000, maxClients: 10000 },
+  chatRateLimit = { max: 20, windowMs: 15 * 60 * 1000, maxClients: 10000 },
   now = Date.now,
 } = {}) {
   if (sender && !EMAIL.test(sender)) throw new Error('Invalid SMTP_USER email address.');
   if (!EMAIL.test(recipient)) throw new Error('Invalid enquiry recipient.');
   const origins = new Set(appOrigin ? [new URL(appOrigin).origin] : DEFAULT_ORIGINS);
   const clients = new Map();
+  const chatClients = new Map();
   const configured = typeof sendMail === 'function' && Boolean(sender);
 
-  function allowClient(address) {
+  function allowClient(address, bucket = clients, policy = rateLimit) {
     const time = now();
     // Expiry is checked on requests, so no background interval retains the server.
-    for (const [key, entry] of clients) if (entry.until <= time) clients.delete(key);
-    const entry = clients.get(address);
+    for (const [key, entry] of bucket) if (entry.until <= time) bucket.delete(key);
+    const entry = bucket.get(address);
     if (!entry) {
-      if (clients.size >= rateLimit.maxClients) return false;
-      clients.set(address, { count: 1, until: time + rateLimit.windowMs });
+      if (bucket.size >= policy.maxClients) return false;
+      bucket.set(address, { count: 1, until: time + policy.windowMs });
       return true;
     }
-    if (entry.count >= rateLimit.max) return false;
+    if (entry.count >= policy.max) return false;
     entry.count++;
     return true;
   }
@@ -133,7 +137,11 @@ export function createApp({
       if (pathname === '/api/health' && request.method === 'GET') {
         return json(response, 200, { ok: true, mailConfigured: configured });
       }
-      if (pathname !== '/api/enquiry') {
+      if (pathname === '/api/chat/status' && request.method === 'GET') {
+        return json(response, 200, { configured: typeof chatReply === 'function' });
+      }
+      const isChat = pathname === '/api/chat';
+      if (pathname !== '/api/enquiry' && !isChat) {
         if (pathname.startsWith('/api/')) return json(response, 404, { code: 'NOT_FOUND' });
         return await staticFile(request, response, pathname);
       }
@@ -143,12 +151,27 @@ export function createApp({
       if (request.headers['content-type']?.split(';')[0].trim().toLowerCase() !== 'application/json') {
         return json(response, 415, { code: 'JSON_REQUIRED' });
       }
-      if (!allowClient(request.socket.remoteAddress || 'unknown')) {
-        return json(response, 429, { code: 'RATE_LIMITED' }, { 'Retry-After': String(Math.ceil(rateLimit.windowMs / 1000)) });
+      const policy = isChat ? chatRateLimit : rateLimit;
+      if (!allowClient(request.socket.remoteAddress || 'unknown', isChat ? chatClients : clients, policy)) {
+        return json(response, 429, { code: 'RATE_LIMITED' }, { 'Retry-After': String(Math.ceil(policy.windowMs / 1000)) });
       }
       let body;
       try { body = await readJson(request, maxBodyBytes); }
       catch (error) { return json(response, error.status || 400, { code: 'INVALID_REQUEST' }); }
+      if (isChat) {
+        const messages = validateChatMessages(body);
+        if (!messages) return json(response, 400, { code: 'INVALID_CHAT_REQUEST' });
+        if (typeof chatReply !== 'function') return json(response, 503, { code: 'AI_NOT_CONFIGURED' });
+        try {
+          const result = await chatReply(messages);
+          if (typeof result?.reply !== 'string' || !result.reply.trim() || result.reply.length > 6000) return json(response, 502, { code: 'AI_UNAVAILABLE' });
+          return json(response, 200, { reply: result.reply });
+        } catch (error) {
+          const statuses = { AI_NOT_CONFIGURED: 503, AI_BUSY: 429, AI_TIMEOUT: 504, AI_UNAVAILABLE: 502, AI_AUTH_FAILED: 503, AI_QUOTA_EXCEEDED: 503 };
+          const code = Object.hasOwn(statuses, error?.code) ? error.code : 'AI_UNAVAILABLE';
+          return json(response, statuses[code], { code });
+        }
+      }
       const fields = validateEnquiry(body);
       if (!fields) return json(response, 400, { code: 'INVALID_ENQUIRY' });
       if (!configured) return json(response, 503, { code: 'MAIL_NOT_CONFIGURED' });

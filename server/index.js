@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 import nodemailer from 'nodemailer';
 import { createApp } from './app.js';
+import { createChatReply } from './chat.js';
 
 const sender = process.env.SMTP_USER?.trim();
 const password = process.env.SMTP_APP_PASSWORD?.replace(/\s/g, '');
@@ -39,6 +40,7 @@ const sendMail = configured ? async message => {
 
 const app = createApp({
   sendMail,
+  chatReply: process.env.OPENAI_API_KEY?.trim() ? createChatReply({ apiKey: process.env.OPENAI_API_KEY, model: process.env.OPENAI_MODEL || 'gpt-4.1-mini' }) : undefined,
   sender,
   recipient,
   appOrigin: process.env.APP_ORIGIN,
@@ -49,6 +51,7 @@ const port = Number(process.env.PORT || 3001);
 const host = process.env.HOST || '127.0.0.1';
 server.listen(port, host, () => {
   console.log(`SunriseAI server listening on ${host}:${port}.`);
+  console.log(process.env.OPENAI_API_KEY?.trim() ? 'AI chat key is configured; live API access requires verification.' : 'AI chat is not configured. Set OPENAI_API_KEY privately.');
   console.log(configured ? 'Gmail sending is configured; inbox delivery still requires verification.' : 'Gmail sending is not configured. Set SMTP_USER and SMTP_APP_PASSWORD privately.');
 });
 server.on('error', error => {
