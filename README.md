@@ -102,6 +102,34 @@ This sends one intentionally invalid enquiry to check the API and browser origin
 
 `EAUTH` means Gmail refused authentication; check the App Password belongs to `SMTP_USER`. `EDNS` indicates DNS resolution failure. Connection/time-out codes indicate a network or SMTP connection problem. `ORIGIN_NOT_ALLOWED` and `RATE_LIMITED` indicate the API refused the request before SMTP. Successful verification does not test recipient acceptance or inbox delivery. Restart development after changing `.env.server.local`; a running server keeps its previously loaded settings.
 
+## Deploy on Vercel
+
+The repository supports Vite static output plus five Node.js 24 serverless functions for health, enquiries, chat, chat status, and voice recommendations. `vercel.json` sets `npm ci`, `npm run build`, `dist`, and a 30-second function duration. `server/runtime.js` configures the same providers for local Node and Vercel without starting a persistent listener inside a function.
+
+On the New Project screen:
+
+- Framework/Application Preset: **Vite**
+- Root Directory: **./**
+- Build Command: **npm run build**
+- Output Directory: **dist**
+- Install Command: **npm ci**
+- Node.js version: **24.x** (set in `package.json`)
+
+Add these variables privately to the **Production** environment and to **Preview** if you want previews to use the integrations:
+
+| Variable | Value |
+| --- | --- |
+| `SMTP_USER` | `sunrisesolution93@gmail.com` |
+| `SMTP_APP_PASSWORD` | Your existing Google App Password |
+| `OPENAI_API_KEY` | Your existing OpenAI project key |
+| `OPENAI_MODEL` | `gpt-4.1-mini` |
+
+Do not prefix secrets with `VITE_`. Do not upload `.env.server.local`; Vercel variables are entered in its private settings. `APP_ORIGIN` can be omitted for the initial deployment: the runtime recognizes trusted `VERCEL_URL` and `VERCEL_PROJECT_PRODUCTION_URL` platform values. When adding a custom domain, set `APP_ORIGIN` to its exact `https://your-domain` origin, then redeploy. The code does not trust a browser's forwarded-host header to grant API access.
+
+Click **Deploy**. After deployment, open the actual HTTPS URL and check `/api/health` and `/api/chat/status`, a general AI question, a voice recommendation, and an explicitly submitted enquiry with Gmail receipt. Configuration tests confirm code paths, not live OpenAI quota or Gmail delivery from Vercel. Variable changes require a new deployment. Browser microphone recognition still depends on browser support and permission; typed input remains available.
+
+The Vercel adapter supports both raw Node request streams and bodies pre-parsed by the platform. It does not start a local port or require `npm start`. Vercel serves the built fonts/assets directly; `/api` requests run the matching function. In-memory rate limits apply per warm function instance and reset on cold starts, so use the host's abuse controls and your OpenAI budget controls for a public production launch.
+
 ## Build and host
 
 ```sh
@@ -111,7 +139,7 @@ npm start
 
 Open http://localhost:3001. This serves both the production website and `/api/enquiry`. `npm run preview` runs the same production server. The server needs access to `smtp.gmail.com` over TLS on TCP port 465. It keeps TLS verification enabled.
 
-For a public deployment, use a host that runs a persistent Node.js process and permits outbound SMTP. Set these **server-side** environment variables in the host's private settings:
+For a persistent Node.js deployment outside Vercel, use a host that runs the server process and permits outbound SMTP. Set these **server-side** environment variables in the host's private settings:
 
 - `SMTP_USER`: the configured Gmail account
 - `SMTP_APP_PASSWORD`: its App Password

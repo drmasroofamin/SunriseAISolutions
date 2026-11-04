@@ -30,6 +30,17 @@ function json(response, status, body, headers = {}) {
 }
 
 function readJson(request, limit) {
+  // Vercel may parse the body before invoking its Node function. Do not wait on
+  // an already-consumed stream; retain the same size and JSON validation.
+  try {
+    if (request.body !== undefined) {
+      const raw = Buffer.isBuffer(request.body) ? request.body.toString('utf8')
+        : typeof request.body === 'string' ? request.body : JSON.stringify(request.body);
+      if (Buffer.byteLength(raw, 'utf8') > limit) return Promise.reject({ status: 413 });
+      return Promise.resolve(JSON.parse(raw));
+    }
+    if (request.readableEnded) return Promise.reject({ status: 400 });
+  } catch { return Promise.reject({ status: 400 }); }
   return new Promise((resolve, reject) => {
     let size = 0;
     const chunks = [];
@@ -76,6 +87,7 @@ export function createApp({
   sender,
   recipient = 'sunrisesolution93@gmail.com',
   appOrigin,
+  additionalOrigins = [],
   staticDir = path.resolve('dist'),
   maxBodyBytes = 32768,
   rateLimit = { max: 5, windowMs: 15 * 60 * 1000, maxClients: 10000 },
@@ -86,6 +98,7 @@ export function createApp({
   if (sender && !EMAIL.test(sender)) throw new Error('Invalid SMTP_USER email address.');
   if (!EMAIL.test(recipient)) throw new Error('Invalid enquiry recipient.');
   const origins = new Set(appOrigin ? [new URL(appOrigin).origin] : DEFAULT_ORIGINS);
+  for (const origin of additionalOrigins) origins.add(new URL(origin).origin);
   const clients = new Map();
   const chatClients = new Map();
   const voiceClients = new Map();
