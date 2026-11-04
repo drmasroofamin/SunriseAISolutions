@@ -130,6 +130,20 @@ Click **Deploy**. After deployment, open the actual HTTPS URL and check `/api/he
 
 The Vercel adapter supports both raw Node request streams and bodies pre-parsed by the platform. It does not start a local port or require `npm start`. Vercel serves the built fonts/assets directly; `/api` requests run the matching function. In-memory rate limits apply per warm function instance and reset on cold starts, so use the host's abuse controls and your OpenAI budget controls for a public production launch.
 
+## Primary domain: sunriseaisolution.org
+
+The public canonical URL, Open Graph URL, robots.txt and sitemap use `https://sunriseaisolution.org/`. These repository files do not register a domain, change DNS, verify Zoho, or prove the site is live.
+
+Because the domain is managed in Vercel:
+
+1. Open the deployed **SunriseAI project → Settings → Domains** and add `sunriseaisolution.org`.
+2. Use the apex as the production primary domain. Add `www.sunriseaisolution.org` and redirect it to `sunriseaisolution.org`. Avoid an apex-to-www redirect: it would conflict with the chosen canonical origin.
+3. If Vercel offers automatic configuration for the domain in the same account, apply it. If it shows DNS records, use the exact records it supplies in Vercel's domain DNS panel; do not guess A/CNAME values. Keep existing MX/SPF/DKIM/DMARC/TXT email records.
+4. In **Settings → Environment Variables**, set Production `APP_ORIGIN=https://sunriseaisolution.org`, then redeploy the latest `main`. Leave the private local `.env.server.local` origin blank when using localhost.
+5. Wait for Vercel to show valid domain configuration and an issued HTTPS certificate. Check the apex site, the www-to-apex redirect, `/api/health`, `/api/chat/status`, a chat/voice request, and a submitted enquiry with Gmail receipt.
+
+The existing Gmail sender and recipient stay `sunrisesolution93@gmail.com`. The old Zoho expiry notice refers to `sunrisecoders.com`; it does not verify or migrate email for this new domain. To use addresses at `sunriseaisolution.org` in Zoho, add and verify the new domain in the Zoho Admin Console and use its exact region/account-specific mail DNS records. Do not replace the current sender until the new mailbox is configured and tested.
+
 ## Build and host
 
 ```sh
@@ -156,7 +170,7 @@ The `config` object in `src/main.jsx` holds the public email, Calendly URL, What
 
 The email-draft alternatives copy all entered fields to Gmail or the visitor's email app; the visitor must review and send that draft. Drafts are held in memory and are not persisted to browser storage. The website does not log enquiry contents or mail credentials.
 
-Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; the website voice consultation uses browser speech and OpenAI; newsletter delivery remains unconnected. Add a production canonical URL and social image when available.
+Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; the website voice consultation uses browser speech and OpenAI; newsletter delivery remains unconnected. The production canonical URL is configured for sunriseaisolution.org; add a social image when available.
 
 ## Validation
 

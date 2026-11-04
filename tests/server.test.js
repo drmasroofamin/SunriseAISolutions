@@ -138,6 +138,7 @@ test('production serves built files, MIME types, HEAD, cache policy, and blocks 
   try {
     await mkdir(path.join(dist, 'assets'), { recursive: true });
     await writeFile(path.join(dist, 'index.html'), '<h1>SunriseAI</h1>');
+    await writeFile(path.join(dist, 'sitemap.xml'), '<urlset><url><loc>https://sunriseaisolution.org/</loc></url></urlset>');
     await writeFile(path.join(dist, 'assets', 'app-a1b2.js'), 'console.log("loaded")');
     await writeFile(path.join(dist, '.env.local'), 'secret');
     await writeFile(path.join(temp, 'outside.txt'), 'outside-secret');
@@ -150,6 +151,10 @@ test('production serves built files, MIME types, HEAD, cache policy, and blocks 
       const asset = await fetch(base + '/assets/app-a1b2.js');
       assert.match(asset.headers.get('content-type'), /javascript/);
       assert.match(asset.headers.get('cache-control'), /immutable/);
+      const sitemap = await fetch(base + '/sitemap.xml');
+      assert.equal(sitemap.status, 200);
+      assert.match(sitemap.headers.get('content-type'), /application\/xml/);
+      assert.match(await sitemap.text(), /sunriseaisolution\.org/);
       const head = await fetch(base + '/', { method: 'HEAD' });
       assert.equal(head.status, 200);
       assert.equal(await head.text(), '');
