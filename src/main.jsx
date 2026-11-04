@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 import {motion, useReducedMotion} from 'framer-motion';
 import {ArrowUpRight, ArrowRight, Sparkles, Phone, Mic, MessageSquare, Workflow, Code2, BrainCircuit, ChartNoAxesCombined, Check, Plus, Minus, Menu, X, Globe, Zap, Activity, ChevronLeft, ChevronRight, Send, Building2, HeartPulse, ShoppingBag, GraduationCap, Megaphone, Store, Play, ShieldCheck} from 'lucide-react';
 import './styles.css';
+import './theme.css';
 import ContactForm from './components/ContactForm';
 import LoadBoundary from './components/LoadBoundary';
 import Chat from './components/Chat';

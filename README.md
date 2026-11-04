@@ -139,6 +139,12 @@ npm run build
 
 Tests exercise the frontend submission helpers and real HTTP APIs using injected fake mail and AI providers. They cover accepted and failed mail, missing configuration, invalid and oversized input, fixed sender/recipient rules, origin checks, rate limits, and email fallbacks without sending any real messages. Browser smoke checks also use simulated responses. Live Gmail authentication and inbox delivery require your private App Password and a real test after configuration.
 
+## Typography and appearance
+
+`src/theme.css` owns the shared slate/navy palette and readability updates. The page background is `#18253d`, with lighter blue cards, warm sunrise accents, Manrope Variable headings and Inter Variable body text. Both fonts are self-hosted as Latin variable WOFF2 assets (about 73KB combined), with `font-display: swap` and system fallbacks; no Google Fonts connection is required. Their license files are included under `public/fonts/`.
+
+After updating this version, run `npm ci` to install the font packages before starting the app. The theme also covers chat, voice, contact and recovery panels. The voice overrides deliberately use higher specificity because that panel's original CSS loads in a separate lazy chunk. Responsive layouts wrap controls and stack compact form rows instead of shrinking readable input text.
+
 ## Structure
 
 - `src/components/Chat.jsx` and `ChatContext.jsx`: shared AI conversation and accessible widgets
