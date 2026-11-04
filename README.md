@@ -13,6 +13,12 @@ npm run dev
 
 Open http://localhost:5173. The development command runs both Vite and the enquiry backend; Ctrl+C stops both. Cloud tasks should use the existing checkout at `/workspace/SunriseAISolutions`. Tasks are isolated; do not create a worktree unless explicitly requested.
 
+## If the browser is blank
+
+Keep the development server terminal open. Stop it with Ctrl+C, then start from the updated checkout with `npm run dev -- --force` to rebuild Vite's dependency cache. Open the exact Local URL printed by Vite and use Ctrl+Shift+R in the browser. If startup reports missing dependencies, run `npm ci` before starting again. Do not delete or share `.env.server.local`.
+
+The website now keeps the main page available if the optional voice-panel download fails, and shows reload/booking recovery options for render errors or an initial script download failure. A failed voice download needs a page reload before retrying. These recovery screens do not repair a stopped server or blocked network request. For diagnosis, check the browser's **Console** tab (the Issues panel is different) and the `npm run dev` terminal output. Share only the error text, never configuration files or keys.
+
 ## Enable Gmail enquiry delivery
 
 1. Sign in to **sunrisesolution93@gmail.com** and enable **2-Step Verification** in Google Account → Security.
