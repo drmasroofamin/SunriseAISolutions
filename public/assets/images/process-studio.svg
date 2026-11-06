@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <title>A considered path forward</title><desc>Grayscale architectural columns and a luminous circular opening create an abstract passage through light.</desc>
+  <defs>
+    <linearGradient id="room" x2="1" y2="1"><stop stop-color="#101a2c"/><stop offset="1" stop-color="#465160"/></linearGradient>
+    <linearGradient id="pillar"><stop stop-color="#a7adb5"/><stop offset=".45" stop-color="#e2e5e9"/><stop offset="1" stop-color="#6e7886"/></linearGradient>
+    <radialGradient id="light"><stop stop-color="#fff"/><stop offset=".52" stop-color="#e5e8ed"/><stop offset=".8" stop-color="#a1aab6"/><stop offset="1" stop-color="#576374"/></radialGradient>
+    <linearGradient id="ground" x2="0" y2="1"><stop stop-color="#919ba8"/><stop offset="1" stop-color="#293447"/></linearGradient>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="1" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".05"/></feComponentTransfer><feBlend in="SourceGraphic" mode="soft-light"/></filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#room)"/>
+  <path d="M0 700H1600V1000H0Z" fill="url(#ground)"/>
+  <circle cx="1070" cy="410" r="306" fill="url(#light)"/>
+  <circle cx="1070" cy="410" r="327" fill="none" stroke="#e0e4e9" stroke-opacity=".3" stroke-width="2"/>
+  <path d="M0 700L650 1000H1590L1245 700Z" fill="#f1f3f5" fill-opacity=".14"/>
+  <path d="M215 0H365V782H215Z" fill="url(#pillar)"/><path d="M365 0H417V757L365 782Z" fill="#4b5666"/>
+  <path d="M510 0H625V725H510Z" fill="url(#pillar)"/><path d="M625 0H664V709L625 725Z" fill="#566170"/>
+  <path d="M0 0H95V835H0Z" fill="url(#pillar)"/><path d="M95 0H150V810L95 835Z" fill="#424e60"/>
+  <path d="M1430 0H1510V744H1430Z" fill="#c2c8d0"/><path d="M1510 0H1600V775L1510 744Z" fill="#717b89"/>
+  <path d="M0 837L330 1000H450L95 835Z" fill="#111a2b" fill-opacity=".47"/><path d="M215 782L855 1000H1040L365 782Z" fill="#111a2b" fill-opacity=".35"/><path d="M510 725L1310 1000H1440L625 725Z" fill="#111a2b" fill-opacity=".23"/>
+  <path d="M1070 410L1600 0M1070 410L1550 1000M1070 410L1050 1000" stroke="#eef0f4" stroke-opacity=".07"/>
+  <rect width="1600" height="1000" filter="url(#grain)" opacity=".55"/>
+</svg>

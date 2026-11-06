@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <title>Connected onboarding concept</title><desc>An illustrative automation canvas links an enquiry, CRM record and team handoff without presenting real performance data.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#18253d"/><stop offset="1" stop-color="#526073"/></linearGradient><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#d9e0ea" fill-opacity=".15"/></pattern></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/><rect width="1200" height="900" fill="url(#grid)"/>
+  <circle cx="1230" cy="900" r="550" fill="#d4dce6" fill-opacity=".06"/>
+  <text x="95" y="125" fill="#e4e8ef" font-family="Arial,sans-serif" font-size="16" letter-spacing="3">CONNECTED OPERATIONS</text><text x="95" y="172" fill="#a7b4c6" font-family="Arial,sans-serif" font-size="15">An illustrative path from enquiry to onboarding.</text>
+  <path d="M346 431H439Q457 431 457 449V552Q457 570 475 570H536M776 570H852Q870 570 870 552V385Q870 367 888 367H941" fill="none" stroke="#d8c1a7" stroke-width="2"/>
+  <path d="M346 431H439Q457 431 457 413V309Q457 291 475 291H645" fill="none" stroke="#b6c4d7" stroke-opacity=".45" stroke-width="1.5" stroke-dasharray="5 7"/>
+  <circle cx="457" cy="431" r="6" fill="#d8c1a7"/><circle cx="870" cy="452" r="6" fill="#d8c1a7"/>
+  <rect x="93" y="338" width="254" height="186" rx="15" fill="#e7ebf0"/><rect x="117" y="363" width="37" height="37" rx="8" fill="#cfd7e1"/><path d="M126 375H145V389H126ZM126 375L135 382L145 375" fill="none" stroke="#526278" stroke-width="1.5"/>
+  <text x="117" y="437" fill="#24334a" font-family="Arial,sans-serif" font-size="20">New enquiry</text><text x="117" y="466" fill="#708095" font-family="Arial,sans-serif" font-size="12">Capture the useful details.</text><text x="117" y="503" fill="#9c7f63" font-family="Arial,sans-serif" font-size="9" letter-spacing="1.4">01 / LISTEN</text>
+  <rect x="536" y="477" width="240" height="186" rx="15" fill="#e7ebf0"/><rect x="560" y="502" width="37" height="37" rx="8" fill="#cfd7e1"/><path d="M570 511H587V530H570ZM574 516H583M574 521H583M574 526H580" fill="none" stroke="#526278" stroke-width="1.5"/>
+  <text x="560" y="576" fill="#24334a" font-family="Arial,sans-serif" font-size="20">CRM record</text><text x="560" y="605" fill="#708095" font-family="Arial,sans-serif" font-size="12">Keep the context together.</text><text x="560" y="642" fill="#9c7f63" font-family="Arial,sans-serif" font-size="9" letter-spacing="1.4">02 / CONNECT</text>
+  <rect x="941" y="274" width="190" height="186" rx="15" fill="#e7ebf0"/><rect x="965" y="299" width="37" height="37" rx="8" fill="#cfd7e1"/><circle cx="983" cy="312" r="4" fill="none" stroke="#526278" stroke-width="1.5"/><path d="M975 328Q975 318 983 318Q991 318 991 328" fill="none" stroke="#526278" stroke-width="1.5"/>
+  <text x="965" y="373" fill="#24334a" font-family="Arial,sans-serif" font-size="20">Team handoff</text><text x="965" y="402" fill="#708095" font-family="Arial,sans-serif" font-size="11">A clear next step.</text><text x="965" y="439" fill="#9c7f63" font-family="Arial,sans-serif" font-size="9" letter-spacing="1.4">03 / MOVE FORWARD</text>
+  <rect x="645" y="259" width="195" height="64" rx="10" fill="#ffffff" fill-opacity=".055" stroke="#c3cddd" stroke-opacity=".2"/><text x="669" y="296" fill="#bdc9d9" font-family="Arial,sans-serif" font-size="12">Prepare a team summary</text>
+  <path d="M95 774H1104" stroke="#d1dae7" stroke-opacity=".18"/><text x="95" y="811" fill="#a0adc0" font-family="Arial,sans-serif" font-size="10" letter-spacing="2">WORKFLOW CONCEPT / NO LIVE SYSTEMS CONNECTED</text>
+</svg>

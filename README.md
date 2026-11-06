@@ -1,6 +1,6 @@
 # SunriseAI
 
-Responsive React website with Vite, Tailwind CSS, Framer Motion, and a Node.js enquiry backend. Booking uses the configured Calendly account. Enquiries are sent directly through Gmail SMTP; FormSubmit and Formspree are no longer used.
+Responsive React website with Vite, Tailwind CSS, an optional studio motion layer, and a Node.js enquiry backend. Booking uses the configured Calendly account. Enquiries are sent directly through Gmail SMTP; FormSubmit and Formspree are no longer used.
 
 ## Run on your PC
 
@@ -164,13 +164,21 @@ Run the build during deployment and use `npm start` as the start command. Serve 
 
 The default API development port is 3001. To change it, use `API_PORT=3002 npm run dev`; Vite will proxy `/api` to that port. If you change Vite's frontend port, configure `APP_ORIGIN` to match it. The backend rate limit is in memory and applies per connection IP, not untrusted forwarded headers; behind a reverse proxy, shared traffic can share a rate-limit bucket. Use platform abuse controls before scaling across instances.
 
+## Studio design and motion
+
+After pulling this design update, run **`npm ci`** before `npm run dev` to install the current motion dependencies. The new homepage uses large editorial typography, architectural imagery, selected-work previews, and grouped service capabilities while retaining the existing chat, voice, booking, and enquiry integrations.
+
+Edit public copy and links in **`src/content/site.js`**. Its data includes the hero, founder information, seven services, capability groups, concept work, process, industries, sample results, testimonials, and FAQs. The lightweight SVG artwork is self-hosted under **`public/assets/images/`**; replace these files or update the image paths and descriptive alt text in the content module. **Illustrative case studies, sample statistics, and placeholder testimonials must be replaced with verified, approved material before using them as client or performance claims.**
+
+**`src/studio.css`** styles the studio homepage; the existing theme and component styles continue to support the integration and recovery panels. Optional effects are lazy-loaded through **`src/effects/studioMotion.js`** using GSAP, ScrollTrigger, SplitType, and Lenis. They progressively enhance visible content with text reveals, work-image transitions, counters, desktop pinning/parallax, and smooth scrolling. The page remains readable if the motion layer cannot load. Reduced-motion preferences skip the enhanced effects; mobile uses simpler reveals and native scrolling instead of desktop pinning and parallax. Interactive dialogs and chat retain their own scrolling, and enhancement cleanup removes its listeners and transforms when appropriate.
+
 ## Contact and content
 
-The `config` object in `src/main.jsx` holds the public email, Calendly URL, WhatsApp number, and LinkedIn URL. SMTP settings belong only in the server environment.
+The `site` export in `src/content/site.js` holds homepage email, Calendly, WhatsApp, and LinkedIn links. Chat and voice panels also have their own contact constants; changing the homepage email does not change those panels or the fixed server-side delivery recipient. Update and verify the full enquiry path when changing mailboxes. SMTP settings belong only in the server environment.
 
 The email-draft alternatives copy all entered fields to Gmail or the visitor's email app; the visitor must review and send that draft. Drafts are held in memory and are not persisted to browser storage. The website does not log enquiry contents or mail credentials.
 
-Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder image is a monogram. Chat connects to OpenAI when a server-side API key is configured; the website voice consultation uses browser speech and OpenAI; newsletter delivery remains unconnected. The production canonical URL is configured for sunriseaisolution.org; add a social image when available.
+Results, case studies, and testimonials are marked placeholders. Replace them with verified content before launch. Pricing is discussed after discovery. The founder section uses verified biography details. Chat connects to OpenAI when a server-side API key is configured; the website voice consultation uses browser speech and OpenAI; newsletter delivery remains unconnected. The production canonical URL is configured for sunriseaisolution.org; add a social image when available.
 
 ## Validation
 
@@ -195,5 +203,9 @@ After updating this version, run `npm ci` to install the font packages before st
 - `src/enquiry.js`: same-origin API submission and encoded email drafts
 - `server/`: validated enquiry API, SMTP configuration, and production static server
 - `scripts/dev.mjs`: starts both development processes
-- `src/main.jsx` and `src/styles.css`: site content, components, and responsive styling
+- `src/content/site.js`: editable agency copy, public links, and image references
+- `public/assets/images/`: self-hosted editorial SVG artwork
+- `src/studio.css`: studio homepage layouts and responsive styling
+- `src/effects/studioMotion.js`: optional GSAP/ScrollTrigger/SplitType/Lenis enhancement
+- `src/main.jsx` and `src/styles.css`: page composition and shared component styling
 - `tests/`: frontend helper and backend tests

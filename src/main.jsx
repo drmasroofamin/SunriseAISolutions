@@ -1,26 +1,896 @@
-import React, {useState, useEffect, useRef, lazy, Suspense} from 'react';
-import {createRoot} from 'react-dom/client';
-import {motion, useReducedMotion} from 'framer-motion';
-import {ArrowUpRight, ArrowRight, Sparkles, Phone, Mic, MessageSquare, Workflow, Code2, BrainCircuit, ChartNoAxesCombined, Check, Plus, Minus, Menu, X, Globe, Zap, Activity, ChevronLeft, ChevronRight, Send, Building2, HeartPulse, ShoppingBag, GraduationCap, Megaphone, Store, Play, ShieldCheck} from 'lucide-react';
-import './styles.css';
-import './theme.css';
-import ContactForm from './components/ContactForm';
-import LoadBoundary from './components/LoadBoundary';
-import Chat from './components/Chat';
-import { ChatProvider } from './components/ChatContext';
-const VoiceAgent = lazy(() => import('./components/VoiceAgent'));
+import React, {
+  lazy,
+  Suspense,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
+import { createRoot } from "react-dom/client";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUpRight,
+  BrainCircuit,
+  Building2,
+  Check,
+  ChevronDown,
+  Code2,
+  GraduationCap,
+  HeartPulse,
+  Menu,
+  MessageSquare,
+  Mic,
+  Phone,
+  Plus,
+  ShoppingBag,
+  Sparkles,
+  Store,
+  Workflow,
+  X,
+  Zap,
+  ChartNoAxesCombined,
+  Megaphone,
+} from "lucide-react";
+import "./styles.css";
+import "./theme.css";
+import "./studio.css";
+import ContactForm from "./components/ContactForm";
+import Chat from "./components/Chat";
+import { ChatProvider } from "./components/ChatContext";
+import LoadBoundary from "./components/LoadBoundary";
+import StudioIntro from "./effects/StudioIntro";
+import {
+  site,
+  navItems,
+  hero,
+  about,
+  services,
+  capabilities,
+  work,
+  processSteps,
+  industries,
+  stats,
+  testimonials,
+  faqs,
+} from "./content/site";
 
-// Replace these values with verified business details before going live.
-const config={email:'sunrisesolution93@gmail.com',calendly:'https://calendly.com/sunrisesolution93/30min',whatsapp:'',linkedin:''};
-const services=[{icon:Phone,title:'AI Voice Agents',copy:'Never miss an opportunity. Human-like agents that answer, qualify, and book. ',detail:'Inbound and outbound calling, appointment booking, and a receptionist that is always available.'},{icon:MessageSquare,title:'AI Chatbots & Support',copy:'Turn every conversation into a great customer experience. Around the clock.',detail:'Helpful agents for your website, WhatsApp, and Instagram, with a smooth handoff to your team.'},{icon:BrainCircuit,title:'Custom AI & Knowledge',copy:'Your business knowledge, instantly accessible. Answers you can trust.',detail:'Custom LLM applications and RAG assistants grounded in your approved documents.'},{icon:Workflow,title:'Workflow Automation',copy:'Connect your tools. Eliminate busywork. Let your team do what they do best.',detail:'n8n, Make, Zapier, and CRM integrations designed around the way you work.'},{icon:Zap,title:'AI Lead Generation',copy:'Find the right people. Start better conversations. Build a healthier pipeline.',detail:'Lead research, qualification, personalized outreach, and sales follow-ups.'},{icon:Code2,title:'Custom AI Software',copy:'From an ambitious idea to a powerful product. Built around your business.',detail:'FastAPI backends, React frontends, and APIs built to integrate with your stack.'},{icon:ChartNoAxesCombined,title:'Data & Machine Learning',copy:'Turn scattered data into clear decisions and your next competitive advantage.',detail:'Dashboards, forecasting, and machine learning solutions that make your data useful.'}];
-const faqs=[['What can AI actually do for my business?','Start with repetitive, time-consuming work: responding to enquiries, booking appointments, updating your CRM, or finding answers in documents. We identify the opportunities with the clearest practical value.'],['Do I need any technical knowledge?','No. We explain every step in plain language, handle the technical work, and train your team to use the solution confidently.'],['How long does a project take?','A focused pilot can often be delivered in a few weeks. We agree on scope, integrations, and a realistic timeline during discovery.'],['Will this work with the tools we already use?','Usually. We assess your CRM, support tools, and existing APIs before recommending an approach.'],['How do you protect our business data?','We agree on access controls, data handling, provider choices, and retention requirements before connecting your systems.'],['What happens after launch?','We monitor the agreed metrics, gather feedback, and offer ongoing support and improvements based on your plan.']];
-function Logo(){return <a className="logo" href="#" aria-label="SunriseAI home"><span className="sun-logo"><i/><b/><em/></span>Sunrise<span>AI</span></a>}
-function Button({children,href=config.calendly||'#contact',secondary=false,onClick,className=''}){return onClick?<button onClick={onClick} className={`button ${secondary?'secondary':''} ${className}`}>{children}<ArrowUpRight size={16}/></button>:<a href={href} className={`button ${secondary?'secondary':''} ${className}`}>{children}<ArrowUpRight size={16}/></a>}
-function Reveal({children,className=''}){const reduced=useReducedMotion();return <motion.div className={className} initial={{opacity:reduced?1:0,y:reduced?0:18}} whileInView={{opacity:1,y:0}} viewport={{once:true,amount:.12}} transition={{duration:.6}}>{children}</motion.div>}
-function Heading({eyebrow,title,copy}){return <Reveal className="section-heading"><span className="eyebrow"><i/>{eyebrow}</span><h2>{title}</h2>{copy&&<p>{copy}</p>}</Reveal>}
-// Count once when results enter the viewport; respect reduced motion.
-function Counter({value}){const ref=useRef(null);const [display,setDisplay]=useState(value);const reduced=useReducedMotion();useEffect(()=>{if(reduced)return;const observer=new IntersectionObserver(([entry])=>{if(!entry.isIntersecting)return;observer.disconnect();const target=Number(value.replace(/[^0-9]/g,''));const suffix=value.includes('%')?'%':'+';const start=performance.now();let frame;const update=now=>{const progress=Math.min((now-start)/1200,1);setDisplay(Math.round(target*(1-Math.pow(1-progress,3))).toLocaleString()+suffix);if(progress<1)frame=requestAnimationFrame(update)};frame=requestAnimationFrame(update);ref.current.cleanup=()=>cancelAnimationFrame(frame)},{threshold:.3});observer.observe(ref.current);return()=>{observer.disconnect();ref.current?.cleanup?.()}},[value,reduced]);return <strong ref={ref}>{display}</strong>}
-function Dashboard(){return <div className="visual"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="orb"><div className="orb-core"/></div><div className="orbit-label"><span className="live-dot"/> INTELLIGENCE IN MOTION</div><motion.div initial={{y:15,opacity:0}} animate={{y:0,opacity:1}} transition={{delay:.3,duration:.8}} className="dashboard"><div className="dash-header"><span className="mini-logo">✳</span><strong>Your AI workspace</strong><span className="status"><i/> All systems active</span><span className="dots">•••</span></div><div className="dash-stats"><div><small>Time saved this month</small><strong>128<span> hrs</span></strong><em>↗ 24.6% <span>vs. last month</span></em></div><div><small>Tasks automated</small><strong>2,486</strong><em>↗ 18.2% <span>vs. last month</span></em></div></div><div className="chart-title"><span>Automation activity</span><small>This week⌄</small></div><div className="chart">{[25,38,31,47,40,58,44,68,59,76,66,88,76,94,83,100,87,113,98,125,110,138,121,148].map((h,i)=><div key={i} style={{height:h*.64,opacity:.35+i*.027}}/>)}</div><div className="chart-days"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div><div className="dash-task"><span className="task-icon"><Phone size={13}/></span><span>New appointment booked<small>AI Voice Agent · Just now</small></span><span className="complete">Completed <Check size={11}/></span></div><div className="dash-foot"><span className="live-dot"/> Your business is running. Even when you're not.</div></motion.div><div className="floating-chip"><span><Zap size={16}/></span><div>Less busywork.<br/><strong>More possibility.</strong></div></div><span className="demo-label">ILLUSTRATIVE DASHBOARD · SAMPLE DATA</span></div>}
-function App(){const [menu,setMenu]=useState(false),[detail,setDetail]=useState(null),[chat,setChat]=useState(false),[faq,setFaq]=useState(0),[testimonial,setTestimonial]=useState(0),[notice,setNotice]=useState(''),[newsletter,setNewsletter]=useState(false),[voice,setVoice]=useState(false);const quotes=[['“Imagine getting your time back — and finally focusing on the work that moves your business forward.”','Alex Morgan','Sample client · Real estate'],['“A more helpful customer experience, without adding more work to our team’s day.”','Jordan Lee','Sample client · E-commerce'],['“One connected workflow. Fewer manual tasks. A much calmer working day.”','Sam Taylor','Sample client · Agency']];return <><header><div className="nav-wrap"><Logo/><nav className={menu?'open':''}>{['Services','Solutions','Case Studies','About','Contact'].map(t=><a key={t} href={'#'+t.toLowerCase().replace(' ','-')} onClick={()=>setMenu(false)}>{t}</a>)}</nav><Button className="nav-cta">Book a Free Call</Button><button className="menu-toggle" aria-label="Toggle menu" aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button></div></header><main><section className="hero container"><div className="hero-glow"/><Reveal className="hero-copy"><div className="availability"><span className="live-dot"/> YOUR NEXT CHAPTER STARTS HERE <ArrowRight size={12}/></div><h1>Less busywork.<br/>More growth.<br/><span>Powered by AI.</span></h1><p className="hero-sub">Automate your business with AI that works while you sleep. We build intelligent solutions that give you time back — and your business room to grow.</p><div className="hero-actions"><Button>Book a Free Strategy Call</Button><a className="work-link" href="#case-studies"><span><Play size={11} fill="currentColor"/></span> See Our Work</a></div><button type="button" className="hero-voice-cta" aria-haspopup="dialog" aria-expanded={voice} onClick={()=>setVoice(true)}><span className="hero-voice-icon"><Mic size={20}/></span><span><strong>Talk to our AI voice agent</strong><small>Speak or type. Explore what AI can do for you.</small></span><ArrowUpRight size={18}/></button><div className="hero-proof"><div className="avatar-stack">{['MK','JL','AS','DR'].map((x,i)=><span key={x} style={{background:['#6c594a','#5d6265','#6d584e','#4b5c56'][i]}}>{x}</span>)}</div><div><div className="stars">★★★★★</div><small>Built for ambitious businesses. Like yours.</small></div></div></Reveal><Dashboard/></section><section className="tech-strip container"><p>BUILT WITH THE BEST. BUILT FOR YOUR BUSINESS.</p><div><span className="tech-open">✳ OpenAI</span><span className="tech-anthropic">ANTHROPIC</span><span>n8n <span className="tech-node">⌘</span></span><span className="tech-make">▰ Make</span><span className="tech-zapier">✳ zapier</span><span className="tech-google"><Globe size={23}/> Google Cloud</span></div></section><section id="services" className="section container"><div className="services-heading"><Heading eyebrow="WHAT WE DO" title={<>Big possibilities.<br/><span className="muted">Practical solutions.</span></>} copy="AI shouldn't be complicated. We make it work for your business, your team, and your bottom line."/><a className="text-link" href="#contact">Find your solution <ArrowUpRight size={17}/></a></div><div className="services-grid">{services.map((s,i)=><Reveal className="service-card" key={s.title}><div className={'service-icon icon-'+i}><s.icon size={23}/></div><h3>{s.title}</h3><p>{s.copy}</p><button className="learn" onClick={()=>setDetail(s)}>Learn more <ArrowUpRight size={15}/></button></Reveal>)}<Reveal className="service-card idea-card"><div className="little-sun">✳</div><h3>Have something<br/>else in mind?</h3><p>Your idea. Our expertise.<br/>Let's build what's next.</p><a className="learn" href="#contact">Let's talk <ArrowUpRight size={15}/></a></Reveal></div></section><section className="section process-section"><div className="container"><Heading eyebrow="SIMPLE BY DESIGN" title={<>From “what if” to <span className="gradient-text">it's working.</span></>} copy="A clear path. A real partnership. No black boxes."/><div className="process-grid">{[['01','Discovery Call','We listen, ask questions, and find where AI can make the biggest difference.'],['02','Strategy & Roadmap','You get a practical plan, clear deliverables, and a path to measurable value.'],['03','Build & Integrate','We build, test, and connect your solution to the tools you already use.'],['04','Launch & Optimize','We get your team comfortable, go live, and keep making things better.']].map(([n,t,p])=><Reveal key={n}><div className="step-number">{n}<ArrowRight size={18}/></div><h3>{t}</h3><p>{p}</p></Reveal>)}</div></div></section><section id="solutions" className="section container"><Heading eyebrow="YOUR INDUSTRY. OUR EXPERTISE." title="Made for the way you work." copy="Different businesses. One goal: more time for what matters."/><div className="industry-grid">{[[Building2,'Real estate'],[HeartPulse,'Healthcare & clinics'],[ShoppingBag,'E-commerce'],[GraduationCap,'Education'],[Megaphone,'Agencies'],[Store,'Local businesses']].map(([Icon,t])=><a href="#contact" key={t}><Icon size={22}/><span>{t}</span><ArrowUpRight size={15}/></a>)}</div><div className="stats"><span className="sample-note">ILLUSTRATIVE RESULTS · EDITABLE PLACEHOLDERS</span>{[['10,000+','Hours given back'],['25,000+','Leads generated'],['50+','Projects delivered'],['98%','Client satisfaction']].map(([n,t])=><Reveal key={t}><Counter value={n}/><span>{t}</span></Reveal>)}</div></section><section id="case-studies" className="section container"><div className="services-heading"><Heading eyebrow="POSSIBILITY, MEET PRACTICALITY" title="Less talk. More impact." copy="A look at what the right automation can make possible."/><span className="sample-badge">Illustrative case studies</span></div><div className="case-grid">{[['Real estate','An open house. A full calendar.','Missed enquiries after business hours.','A voice agent that qualifies leads and books viewings.','24/7','Lead response','estate'],['E-commerce','Better support. Happier customers.','A growing queue of repetitive customer questions.','A knowledge-powered assistant for instant answers.','60%','Fewer routine tickets','commerce'],['Professional services','Your workflow, without the work.','Hours lost moving data between disconnected tools.','Connected CRM, email, and onboarding workflows.','30 hrs','Saved per week','workflow']].map(([tag,t,p,s,n,r,cls])=><Reveal className="case-card" key={t}><div className={'case-art '+cls}><div className="case-art-grid"/>{cls==='estate'?<Building2 size={76} strokeWidth={.7}/>:cls==='commerce'?<MessageSquare size={76} strokeWidth={.7}/>:<Workflow size={76} strokeWidth={.7}/>}<span className="case-metric"><strong>{n}</strong>{r}</span></div><div className="case-body"><span className="tag">{tag}</span><h3>{t}</h3><p><b>Challenge</b> {p}</p><p><b>Solution</b> {s}</p><small>Sample outcome for illustration, not a client claim.</small><button className="learn" onClick={()=>setDetail({title:t,detail:`Illustrative scenario: ${p} ${s} The displayed result (${n} ${r.toLowerCase()}) is a placeholder. Actual results depend on the agreed scope and business context.`})}>Explore the solution <ArrowUpRight size={15}/></button></div></Reveal>)}</div></section><section className="section container demo-section" id="demo"><div><Heading eyebrow="DON'T JUST IMAGINE IT" title={<>Meet your next<br/><span className="gradient-text">team member.</span></>} copy="Always helpful. Always available. Talk with our AI assistant about your goals and explore what automation could do for your business."/><div className="demo-benefits"><span><Check size={16}/> Answers in seconds</span><span><Check size={16}/> Built around your business</span><span><Check size={16}/> Ready when your customers are</span></div><Button secondary onClick={()=>setVoice(true)}>Talk to our AI voice agent <Phone size={16}/></Button><small className="subtle-note">A guided voice consultation. Microphone optional; typing is always available.</small></div><Chat/></section><section className="testimonial-section section"><div className="container testimonial"><div><span className="eyebrow"><i/> BUILT ON PARTNERSHIP</span><h2>Good technology.<br/><span className="muted">Even better people.</span></h2><p className="subtle-note">Placeholder testimonials for layout preview.</p></div><div className="quote"><div className="stars">★★★★★</div><blockquote>{quotes[testimonial][0]}</blockquote><div className="quote-bottom"><div className="quote-person"><span>{quotes[testimonial][1].split(' ').map(s=>s[0]).join('')}</span><div><strong>{quotes[testimonial][1]}</strong><small>{quotes[testimonial][2]}</small></div></div><div className="carousel-controls"><button aria-label="Previous testimonial" onClick={()=>setTestimonial((testimonial+2)%3)}><ChevronLeft size={18}/></button><button aria-label="Next testimonial" onClick={()=>setTestimonial((testimonial+1)%3)}><ChevronRight size={18}/></button></div></div></div></div></section><section id="about" className="section container about-section"><div className="founder-art"><div className="founder-sun"/><span className="founder-monogram">MA<span>HUMAN EXPERTISE.<br/>INTELLIGENT POSSIBILITIES.</span></span><div className="founder-caption"><strong>Dr. Masroof Amin</strong><span>Founder, SunriseAI</span></div><div className="experience-badge"><strong>15+</strong><span>years of<br/>building what's next</span></div></div><div><Heading eyebrow="THE HUMAN BEHIND THE AI" title={<>Deep expertise.<br/><span className="muted">Down-to-earth approach.</span></>} copy="SunriseAI was founded by Dr. Masroof Amin, a PhD in Big Data and Data Science with 15+ years of experience across software, data, and machine learning."/><p>Our mission is simple: make powerful technology genuinely useful to the people building businesses. We listen first, build with purpose, and measure what matters.</p><div className="values"><span><ShieldCheck size={17}/> Trust by design</span><span><Activity size={17}/> Outcomes over hype</span><span><HeartPulse size={17}/> People first</span></div><a className="text-link" href="#contact">Let's build something meaningful <ArrowUpRight size={17}/></a></div></section><section className="section container faq-section"><div><Heading eyebrow="A LITTLE MORE CLARITY" title={<>Good questions.<br/><span className="muted">Straight answers.</span></>}/><p>Something else on your mind?</p><a className="text-link" href="#contact">We're happy to help <ArrowUpRight size={16}/></a></div><div className="faqs">{faqs.map(([q,a],i)=><div className="faq" key={q}><button aria-expanded={faq===i} aria-controls={'faq-'+i} onClick={()=>setFaq(faq===i?null:i)}>{q}{faq===i?<Minus size={17}/>:<Plus size={17}/>}</button>{faq===i&&<p id={'faq-'+i}>{a}</p>}</div>)}</div></section><section className="section container" id="contact"><div className="contact-panel"><div><span className="eyebrow"><i/> YOUR BRIGHTER TOMORROW</span><h2>Ready to put your<br/>business on <span className="gradient-text">autopilot?</span></h2><p>Let's find out where AI can make your biggest difference.<br/>No pressure. No jargon. Just possibilities.</p>{config.calendly?<iframe title="Book a SunriseAI strategy call" src={config.calendly+'?hide_gdpr_banner=0&background_color=141823&text_color=f1f1f3&primary_color=ff9d4b'} loading="lazy" className="calendly"/>:<div className="booking-note"><Phone size={18}/><span>A free 30-minute strategy conversation.<small>Request a call using the form. Online scheduling is not connected yet.</small></span></div>}<div className="contact-assurances"><span><Check size={14}/> Free consultation</span><span><Check size={14}/> Tailored recommendations</span></div></div><ContactForm email={config.email} calendly={config.calendly} services={services}/></div></section></main><footer className="container"><div className="footer-main"><div><Logo/><p>A brighter way to work.<br/>A smarter way to grow.</p><div className="footer-socials"><button onClick={()=>setNotice(config.linkedin?'Find us at '+config.linkedin:'Our LinkedIn profile will be added soon.')} aria-label="LinkedIn">in</button><button onClick={()=>config.whatsapp?window.open('https://wa.me/'+config.whatsapp,'_blank','noopener,noreferrer'):setNotice('WhatsApp is not connected yet. Please use the contact form.')} aria-label="WhatsApp"><Phone size={15}/></button></div></div><div><h4>Explore</h4>{['Services','Solutions','Case Studies','About'].map(t=><a key={t} href={'#'+t.toLowerCase().replace(' ','-')}>{t}</a>)}</div><div><h4>Let's connect</h4><a href={config.calendly}>Book a free call <ArrowUpRight size={12}/></a><a href="#contact">Contact the team</a><a href={`mailto:${config.email}`}>{config.email}</a></div><div className="newsletter"><h4>A little intelligence in your inbox.</h4><p>Practical AI ideas. No noise.</p><form onSubmit={e=>{e.preventDefault();setNewsletter(true)}}><input type="email" required aria-label="Newsletter email" placeholder="Your email address"/><button aria-label="Join newsletter"><ArrowRight size={17}/></button></form><small aria-live="polite">{newsletter?'Preview only — subscription is not connected yet.':'Newsletter preview · not yet accepting subscriptions'}</small></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} SunriseAI. All rights reserved.</span><span>Built with intelligence. Designed for people. <span className="tiny-sun">✳</span></span></div></footer>{voice&&<LoadBoundary voice onClose={()=>setVoice(false)}><Suspense fallback={<div className="modal-backdrop" role="status">Opening voice consultation…</div>}><VoiceAgent onClose={()=>setVoice(false)}/></Suspense></LoadBoundary>}<div className="floating-actions"><button type="button" className="voice-launcher" aria-label="Talk to our AI voice agent" aria-haspopup="dialog" aria-expanded={voice} title="Talk to our AI voice agent" onClick={()=>setVoice(true)}><Mic size={18}/><span>Voice AI</span></button><button className="whatsapp-button" aria-label="Contact on WhatsApp" onClick={()=>config.whatsapp?window.open('https://wa.me/'+config.whatsapp,'_blank','noopener,noreferrer'):setNotice('WhatsApp is not connected yet. Please use the contact form to get in touch.')}><Phone size={19}/></button><button className="chat-button" aria-label={chat?'Close assistant':'Open assistant'} onClick={()=>setChat(!chat)}>{chat?<X size={21}/>:<MessageSquare size={21}/>}<span className="notification-dot"/></button></div>{chat&&<div className="floating-chat"><Chat compact/></div>}{(detail||notice)&&<div className="modal-backdrop" onKeyDown={e=>{if(e.key==='Escape'){setDetail(null);setNotice('')}}} onClick={()=>{setDetail(null);setNotice('')}}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={e=>e.stopPropagation()}><button className="modal-close" autoFocus aria-label="Close dialog" onClick={()=>{setDetail(null);setNotice('')}}><X/></button><Sparkles className="modal-spark"/><h2 id="modal-title">{detail?.title||'A quick heads-up'}</h2><p>{detail?.detail||notice}</p><Button onClick={()=>{setDetail(null);setNotice('');document.getElementById('contact').scrollIntoView({behavior:'smooth'})}}>Let's talk</Button></div></div>}</>}
+const VoiceAgent = lazy(() => import("./components/VoiceAgent"));
+const icons = {
+  Phone,
+  MessageSquare,
+  BrainCircuit,
+  Workflow,
+  Zap,
+  Code2,
+  ChartNoAxesCombined,
+  Building2,
+  HeartPulse,
+  ShoppingBag,
+  GraduationCap,
+  Megaphone,
+  Store,
+  Sparkles,
+};
 
-createRoot(document.getElementById('root')).render(<LoadBoundary><ChatProvider><App/></ChatProvider></LoadBoundary>);
+function RollLink({ children, href, className = "", onClick }) {
+  return (
+    <a
+      href={href}
+      className={`roll-link ${className}`}
+      onClick={onClick}
+      aria-label={children}
+    >
+      <span className="roll-link-window" aria-hidden="true">
+        <span>{children}</span>
+        <span>{children}</span>
+      </span>
+    </a>
+  );
+}
+function Brand({ footer = false }) {
+  return (
+    <a
+      href="#top"
+      className={`studio-brand ${footer ? "studio-brand-footer" : ""}`}
+      aria-label="SunriseAI home"
+    >
+      <span className="sun-logo" aria-hidden="true">
+        <i />
+        <b />
+        <em />
+      </span>
+      <strong>
+        Sunrise<span>AI</span>
+      </strong>
+    </a>
+  );
+}
+function BookingLink({
+  children = "Start a conversation",
+  pale = false,
+  className = "",
+}) {
+  return (
+    <a
+      href={site.booking}
+      className={`studio-button ${pale ? "is-pale" : ""} ${className}`}
+    >
+      <span>{children}</span>
+      <ArrowUpRight size={18} />
+    </a>
+  );
+}
+function SectionLabel({ number, children, light = false }) {
+  return (
+    <p className={`studio-label ${light ? "is-light" : ""}`}>
+      <span>{number}</span>
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/** Dialogs own focus and scrolling, independently of the decorative motion layer. */
+function DetailDialog({ detail, onClose }) {
+  const id = useId(),
+    ref = useRef(null),
+    closeRef = useRef(onClose);
+  closeRef.current = onClose;
+  useEffect(() => {
+    const opener = document.activeElement;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    ref.current.querySelector("button")?.focus();
+    function keydown(event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeRef.current();
+      }
+      if (event.key === "Tab") {
+        const controls = [
+          ...ref.current.querySelectorAll(
+            "button:not(:disabled),a[href],input:not(:disabled)",
+          ),
+        ];
+        if (event.shiftKey && document.activeElement === controls[0]) {
+          event.preventDefault();
+          controls.at(-1)?.focus();
+        }
+        if (!event.shiftKey && document.activeElement === controls.at(-1)) {
+          event.preventDefault();
+          controls[0]?.focus();
+        }
+      }
+    }
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", keydown);
+      opener?.isConnected && opener.focus();
+    };
+  }, []);
+  const item = detail.item;
+  return (
+    <div
+      className="studio-dialog-backdrop"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        ref={ref}
+        className="studio-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={id}
+      >
+        <button
+          className="studio-dialog-close"
+          aria-label="Close details"
+          onClick={onClose}
+        >
+          <X size={21} />
+        </button>
+        <span className="studio-kicker">
+          {detail.kind === "work"
+            ? "ILLUSTRATIVE CONCEPT STUDY"
+            : "BUILT AROUND YOUR BUSINESS"}
+        </span>
+        <h2 id={id}>{item.title}</h2>
+        {item.image && (
+          <img src={item.image} alt={item.alt} width="1000" height="750" />
+        )}
+        {detail.kind === "work" ? (
+          <div className="studio-dialog-copy">
+            <h3>The challenge</h3>
+            <p>{item.problem}</p>
+            <h3>The approach</h3>
+            <p>{item.solution}</p>
+            <h3>The possibility</h3>
+            <p>{item.result}</p>
+            <p className="studio-disclosure">
+              A concept scenario, not a verified client project or performance
+              claim.
+            </p>
+          </div>
+        ) : (
+          <p>{item.detail || item.description}</p>
+        )}
+        <BookingLink>Discuss your project</BookingLink>
+      </section>
+    </div>
+  );
+}
+
+function App() {
+  const root = useRef(null);
+  const [menu, setMenu] = useState(false),
+    [voice, setVoice] = useState(false),
+    [chat, setChat] = useState(false);
+  const [detail, setDetail] = useState(null),
+    [newsletter, setNewsletter] = useState(false);
+
+  useEffect(() => {
+    let disposed = false,
+      cleanup;
+    // Motion is optional. Failed downloads leave the complete page visible.
+    import("./effects/studioMotion")
+      .then(({ initStudioMotion }) => {
+        if (!disposed && root.current) cleanup = initStudioMotion(root.current);
+      })
+      .catch(() => {
+        document.documentElement.dataset.motion = "unavailable";
+      });
+    return () => {
+      disposed = true;
+      cleanup?.();
+    };
+  }, []);
+  function openVoice() {
+    setMenu(false);
+    setChat(false);
+    setVoice(true);
+  }
+  function openWhatsApp() {
+    if (site.whatsapp)
+      window.open(
+        `https://wa.me/${site.whatsapp}`,
+        "_blank",
+        "noopener,noreferrer",
+      );
+    else
+      document.getElementById("contact").scrollIntoView({ behavior: "smooth" });
+  }
+
+  return (
+    <div ref={root} className="studio-shell" id="top">
+      <StudioIntro brand={site.name} />
+      <a className="studio-skip" href="#main-content">
+        Skip to content
+      </a>
+      <header className="studio-nav">
+        <Brand />
+        <nav
+          className={`studio-navigation ${menu ? "is-open" : ""}`}
+          aria-label="Main navigation"
+        >
+          {navItems.map((link) => (
+            <RollLink
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenu(false)}
+            >
+              {link.label}
+            </RollLink>
+          ))}
+        </nav>
+        <a href={site.booking} className="studio-nav-cta">
+          Let’s talk <ArrowUpRight size={16} />
+        </a>
+        <button
+          className="studio-menu"
+          aria-label={menu ? "Close menu" : "Open menu"}
+          aria-expanded={menu}
+          onClick={() => setMenu(!menu)}
+        >
+          {menu ? <X /> : <Menu />}
+        </button>
+      </header>
+
+      <main id="main-content" className="studio-main">
+        <section className="studio-hero studio-container">
+          <div className="studio-hero-meta" data-hero-reveal>
+            <span>
+              <i /> {hero.eyebrow}
+            </span>
+            <span>Human ambition. Intelligent systems.</span>
+          </div>
+          <div className="studio-hero-title-wrap">
+            <h1 data-split-title>
+              {hero.title.map((line, index) => (
+                <React.Fragment key={line}>
+                  {index > 0 && <br />}
+                  {line}
+                </React.Fragment>
+              ))}
+            </h1>
+            <span className="studio-hero-spark" aria-hidden="true">
+              <svg
+                viewBox="0 0 100 100"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="8"
+                strokeLinecap="round"
+              >
+                <path d="M50 8v84M8 50h84M20 20l60 60M20 80l60-60" />
+              </svg>
+            </span>
+          </div>
+          <div className="studio-hero-bottom">
+            <div className="studio-hero-intro" data-hero-reveal>
+              <p>{hero.description}</p>
+              <div className="studio-hero-actions">
+                <BookingLink>Book a free strategy call</BookingLink>
+                <a href="#case-studies" className="studio-inline-link">
+                  Explore our work <ArrowDown size={16} />
+                </a>
+              </div>
+              <button
+                className="studio-voice-hero"
+                onClick={openVoice}
+                aria-haspopup="dialog"
+              >
+                <span>
+                  <Mic size={18} />
+                </span>
+                Talk to our AI voice agent <ArrowUpRight size={15} />
+              </button>
+            </div>
+            <button
+              className="studio-feature"
+              data-hero-reveal
+              data-cursor="View"
+              onClick={() => setDetail({ kind: "work", item: work[0] })}
+              aria-label="Explore our illustrative AI agent concept"
+            >
+              <span className="studio-feature-image">
+                <img
+                  src="/assets/images/hero-studio.svg"
+                  alt="Abstract sculptural sunrise and connected intelligent systems"
+                  width="1000"
+                  height="750"
+                  fetchPriority="high"
+                />
+              </span>
+              <span className="studio-feature-caption">
+                <span>Designed to work together.</span>
+                <ArrowUpRight size={16} />
+              </span>
+            </button>
+          </div>
+          <div className="studio-hero-foot" data-hero-reveal>
+            <span>
+              SCROLL TO EXPLORE <ArrowDown size={12} />
+            </span>
+            <span>Built for your next chapter.</span>
+            <span>01 — 08</span>
+          </div>
+        </section>
+
+        <section id="about" className="studio-manifesto studio-container">
+          <SectionLabel number="01">A SIMPLE BELIEF</SectionLabel>
+          <div className="studio-manifesto-grid">
+            <p data-reveal-words className="studio-statement">
+              {about.statement}
+            </p>
+            <div className="studio-about-note">
+              <span className="studio-kicker">THE HUMAN BEHIND THE AI</span>
+              <h3>Dr. Masroof Amin</h3>
+              <p>{about.founderBio}</p>
+              <p>{about.mission}</p>
+              <ul>
+                {about.values.map((value) => (
+                  <li key={value}>
+                    <Check size={14} />
+                    {value}
+                  </li>
+                ))}
+              </ul>
+              <RollLink href="#contact">
+                Let’s build something meaningful
+              </RollLink>
+            </div>
+          </div>
+        </section>
+
+        <section
+          id="case-studies"
+          className="studio-work studio-container"
+          data-work-section
+        >
+          <div className="studio-section-top">
+            <SectionLabel number="02">SELECTED POSSIBILITIES</SectionLabel>
+            <span className="studio-disclosure">
+              Illustrative concept studies
+            </span>
+          </div>
+          <h2 className="studio-section-title" data-motion-reveal>
+            Real problems.
+            <br />
+            <span>Thoughtful solutions.</span>
+          </h2>
+          <div className="studio-work-grid">
+            <div className="studio-work-visual" aria-hidden="true">
+              {work.map((project, index) => (
+                <figure
+                  key={project.id}
+                  data-work-preview={index}
+                  className={`studio-work-preview ${index === 0 ? "is-active" : ""}`}
+                >
+                  <img
+                    src={project.image}
+                    alt=""
+                    width="1000"
+                    height="750"
+                    loading="lazy"
+                  />
+                  <figcaption>
+                    <span>{project.category}</span>
+                    <span>{project.number}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <div className="studio-work-list">
+              {work.map((project, index) => (
+                <article
+                  key={project.id}
+                  data-work-item={index}
+                  className={`studio-work-item ${index === 0 ? "is-active" : ""}`}
+                >
+                  <span className="studio-project-number">
+                    {project.number} / CONCEPT STUDY
+                  </span>
+                  <img
+                    className="studio-work-mobile"
+                    src={project.image}
+                    alt={project.alt}
+                    width="1000"
+                    height="750"
+                    loading="lazy"
+                  />
+                  <button
+                    className="studio-project-title"
+                    data-cursor="View"
+                    onClick={() => setDetail({ kind: "work", item: project })}
+                  >
+                    <span>{project.title}</span>
+                    <ArrowUpRight size={34} />
+                  </button>
+                  <p>{project.description}</p>
+                  <div className="studio-tags">
+                    {project.tags.map((tag) => (
+                      <span key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                  <button
+                    className="studio-inline-link"
+                    onClick={() => setDetail({ kind: "work", item: project })}
+                  >
+                    Explore the approach <ArrowUpRight size={15} />
+                  </button>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="services" className="studio-capabilities studio-container">
+          <SectionLabel number="03">OUR CAPABILITIES</SectionLabel>
+          <div className="studio-capabilities-title">
+            <h2 data-motion-reveal>
+              From an idea.
+              <br />
+              To your advantage.
+            </h2>
+            <p>
+              One thoughtful partner for the systems that move your business
+              forward.
+            </p>
+          </div>
+          <div className="studio-stack">
+            {capabilities.map((capability, index) => (
+              <article
+                data-stack-card
+                className={`studio-capability capability-${index}`}
+                key={capability.number}
+              >
+                <div className="studio-capability-head">
+                  <span>{capability.number}</span>
+                  <span>STRATEGY. ENGINEERING. IMPACT.</span>
+                  <ArrowUpRight size={25} />
+                </div>
+                <div className="studio-capability-grid">
+                  <div>
+                    <h3>{capability.title}</h3>
+                    <p>{capability.description}</p>
+                    <BookingLink pale>Find your starting point</BookingLink>
+                  </div>
+                  <div className="studio-service-list">
+                    {capability.serviceIds.map((id) => {
+                      const service = services.find((item) => item.id === id);
+                      if (!service) return null;
+                      const Icon = icons[service.icon] || Sparkles;
+                      return (
+                        <button
+                          key={id}
+                          onClick={() =>
+                            setDetail({ kind: "service", item: service })
+                          }
+                        >
+                          <Icon size={20} />
+                          <span>
+                            <strong>{service.title}</strong>
+                            <small>{service.description}</small>
+                          </span>
+                          <Plus size={18} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="studio-process">
+          <div className="studio-process-media" aria-hidden="true">
+            <img
+              data-parallax
+              src="/assets/images/process-studio.svg"
+              alt=""
+              width="1800"
+              height="1100"
+              loading="lazy"
+            />
+          </div>
+          <div className="studio-container studio-process-content">
+            <SectionLabel number="04">HOW WE GET THERE</SectionLabel>
+            <h2 data-motion-reveal>
+              Clarity first.
+              <br />
+              Momentum follows.
+            </h2>
+            <div className="studio-process-grid">
+              {processSteps.map((step) => (
+                <article data-motion-reveal key={step.number}>
+                  <span>{step.number}</span>
+                  <h3>{step.title}</h3>
+                  <p>{step.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="solutions" className="studio-sectors studio-container">
+          <SectionLabel number="05">BUILT AROUND YOU</SectionLabel>
+          <div className="studio-sectors-grid">
+            <h2 data-motion-reveal>
+              Different businesses.
+              <br />
+              Brighter possibilities.
+            </h2>
+            <div>
+              {industries.map((industry) => {
+                const Icon = icons[industry.icon] || Building2;
+                return (
+                  <a href="#contact" key={industry.name}>
+                    <Icon size={21} />
+                    <span>{industry.name}</span>
+                    <ArrowUpRight size={18} />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+          <div className="studio-stats-heading">
+            <span>MEASURABLE AMBITION</span>
+            <small>
+              Editable sample figures · illustrative, not verified client
+              results
+            </small>
+          </div>
+          <div className="studio-stats">
+            {stats.map((stat) => (
+              <div key={stat.label}>
+                <strong>
+                  <span data-count-to={stat.value} data-suffix={stat.suffix}>
+                    {Number(stat.value).toLocaleString()}
+                    {stat.suffix}
+                  </span>
+                </strong>
+                <span>{stat.label.replace(/sample\s*/i, "")}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="demo" className="studio-demo studio-container">
+          <div>
+            <SectionLabel number="06">A CONVERSATION STARTER</SectionLabel>
+            <h2 data-motion-reveal>
+              Meet your next
+              <br />
+              <span>team member.</span>
+            </h2>
+            <p>
+              Ask a question. Explore an idea. See where intelligent automation
+              could take your business.
+            </p>
+            <button
+              className="studio-button"
+              onClick={openVoice}
+              aria-haspopup="dialog"
+            >
+              <Mic size={18} />
+              <span>Talk to our AI voice agent</span>
+              <ArrowUpRight size={18} />
+            </button>
+            <small className="studio-disclosure">
+              A guided website consultation. Speak or type.
+            </small>
+          </div>
+          <div className="studio-chat-frame" data-motion-reveal>
+            <Chat />
+          </div>
+        </section>
+
+        <section className="studio-testimonials studio-container">
+          <SectionLabel number="07">GOOD WORK IS A PARTNERSHIP</SectionLabel>
+          <div className="studio-testimonial-top">
+            <h2 data-motion-reveal>
+              Technology with
+              <br />a human side.
+            </h2>
+            <p className="studio-disclosure">
+              Sample testimonials for layout preview. Replace with verified
+              client quotes.
+            </p>
+          </div>
+          <div className="studio-quote-list">
+            {testimonials.map((item, index) => (
+              <figure data-motion-reveal key={`${item.name}-${index}`}>
+                <span>00{index + 1}</span>
+                <blockquote>{item.quote}</blockquote>
+                <figcaption>
+                  <strong>{item.name}</strong>
+                  <small>{item.role}</small>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        <section className="studio-faq studio-container">
+          <div>
+            <span className="studio-kicker">BEFORE WE BEGIN</span>
+            <h2 data-motion-reveal>
+              Good questions.
+              <br />
+              Clear answers.
+            </h2>
+          </div>
+          <div className="studio-faq-list">
+            {faqs.map((item) => (
+              <details key={item.question}>
+                <summary>
+                  {item.question}
+                  <Plus size={19} />
+                </summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section id="contact" className="studio-contact">
+          <div className="studio-contact-media" aria-hidden="true">
+            <img
+              data-parallax
+              src="/assets/images/process-studio.svg"
+              alt=""
+              width="1800"
+              height="1100"
+              loading="lazy"
+            />
+          </div>
+          <div className="studio-container">
+            <SectionLabel number="08">LET’S MAKE WHAT’S NEXT</SectionLabel>
+            <div className="studio-contact-grid">
+              <div className="studio-contact-intro">
+                <h2 data-motion-reveal>
+                  Your next chapter
+                  <br />
+                  starts with
+                  <br />
+                  <em>hello.</em>
+                </h2>
+                <a
+                  href={`mailto:${site.email}`}
+                  className="studio-contact-email"
+                >
+                  {site.email}
+                  <ArrowUpRight size={20} />
+                </a>
+                <p>
+                  No pressure. No jargon. Just a practical conversation about
+                  what could work better.
+                </p>
+                <a href={site.booking} className="studio-inline-link">
+                  Prefer to book a free call? <ArrowUpRight size={17} />
+                </a>
+              </div>
+              <div className="studio-contact-paper">
+                <ContactForm
+                  email={site.email}
+                  calendly={site.booking}
+                  services={services}
+                  stepped
+                />
+              </div>
+            </div>
+            <details className="studio-calendar">
+              <summary>
+                Choose a meeting time here <ChevronDown size={18} />
+              </summary>
+              <iframe
+                title="Book a SunriseAI strategy call"
+                src={site.booking + "?hide_gdpr_banner=0"}
+                loading="lazy"
+              />
+            </details>
+          </div>
+        </section>
+      </main>
+
+      <footer className="studio-footer">
+        <div className="studio-container">
+          <div className="studio-footer-top">
+            <div>
+              <Brand footer />
+              <p>
+                Human ambition.
+                <br />
+                Intelligent possibilities.
+              </p>
+            </div>
+            <div>
+              <span className="studio-kicker">EXPLORE</span>
+              {navItems.map((link) => (
+                <RollLink key={link.href} href={link.href}>
+                  {link.label}
+                </RollLink>
+              ))}
+            </div>
+            <div>
+              <span className="studio-kicker">ELSEWHERE</span>
+              <RollLink href={site.github}>GitHub</RollLink>
+              {site.linkedin && (
+                <RollLink href={site.linkedin}>LinkedIn</RollLink>
+              )}
+              <a href={`mailto:${site.email}`} className="studio-inline-link">
+                Email us <ArrowUpRight size={14} />
+              </a>
+              <button className="studio-inline-link" onClick={openWhatsApp}>
+                {site.whatsapp ? "WhatsApp" : "Contact us"}{" "}
+                <ArrowUpRight size={14} />
+              </button>
+            </div>
+            <div className="studio-footer-notes">
+              <span className="studio-kicker">NOTES FROM SUNRISE</span>
+              <p>Practical ideas for a brighter way to work.</p>
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setNewsletter(true);
+                }}
+              >
+                <label className="sr-only" htmlFor="studio-newsletter">
+                  Email for future newsletter
+                </label>
+                <input
+                  id="studio-newsletter"
+                  type="email"
+                  placeholder="Your email address"
+                  required
+                />
+                <button aria-label="Join newsletter preview">
+                  <ArrowRight size={18} />
+                </button>
+              </form>
+              <small role="status">
+                {newsletter
+                  ? "The newsletter is not connected yet. Please email us to stay in touch."
+                  : "Newsletter preview · subscriptions opening soon"}
+              </small>
+            </div>
+          </div>
+          <a
+            className="studio-footer-wordmark"
+            href="#top"
+            aria-label="SunriseAI — back to top"
+          >
+            Sunrise<span>AI</span>
+            <ArrowUpRight />
+          </a>
+          <div className="studio-footer-bottom">
+            <span>© {new Date().getFullYear()} SunriseAI</span>
+            <span>Thoughtfully built. Ready for what’s next.</span>
+            <a href="#top">Back to top ↑</a>
+          </div>
+        </div>
+      </footer>
+
+      <div className="floating-actions studio-floating">
+        <button
+          className="voice-launcher"
+          aria-label="Talk to our AI voice agent"
+          aria-haspopup="dialog"
+          aria-expanded={voice}
+          onClick={openVoice}
+        >
+          <Mic size={18} />
+          <span>Voice AI</span>
+        </button>
+        <button
+          className="whatsapp-button"
+          aria-label={
+            site.whatsapp ? "Contact on WhatsApp" : "Go to contact form"
+          }
+          onClick={openWhatsApp}
+        >
+          <Phone size={18} />
+        </button>
+        <button
+          className="chat-button"
+          aria-label={chat ? "Close assistant" : "Open assistant"}
+          aria-expanded={chat}
+          onClick={() => setChat(!chat)}
+        >
+          {chat ? <X size={21} /> : <MessageSquare size={21} />}
+        </button>
+      </div>
+      {chat && (
+        <div className="floating-chat">
+          <Chat compact />
+        </div>
+      )}
+      {detail && (
+        <DetailDialog detail={detail} onClose={() => setDetail(null)} />
+      )}
+      {voice && (
+        <LoadBoundary voice onClose={() => setVoice(false)}>
+          <Suspense
+            fallback={
+              <div className="modal-backdrop" role="status">
+                Opening voice consultation…
+              </div>
+            }
+          >
+            <VoiceAgent onClose={() => setVoice(false)} />
+          </Suspense>
+        </LoadBoundary>
+      )}
+    </div>
+  );
+}
+
+createRoot(document.getElementById("root")).render(
+  <LoadBoundary>
+    <ChatProvider>
+      <App />
+    </ChatProvider>
+  </LoadBoundary>,
+);

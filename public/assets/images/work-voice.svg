@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900" viewBox="0 0 1200 900">
+  <title>Voice reception concept</title><desc>An illustrative calling interface with an abstract waveform and a viewing-request card.</desc>
+  <defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#d7dbdf"/><stop offset="1" stop-color="#a2abb6"/></linearGradient><linearGradient id="card" x2="1" y2="1"><stop stop-color="#25324a"/><stop offset="1" stop-color="#142036"/></linearGradient><radialGradient id="disc"><stop stop-color="#e6e8eb"/><stop offset="1" stop-color="#737f90"/></radialGradient></defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <path d="M0 760L1200 360V900H0Z" fill="#eef0f2" fill-opacity=".4"/>
+  <ellipse cx="593" cy="748" rx="435" ry="46" fill="#233047" fill-opacity=".12"/>
+  <rect x="161" y="140" width="870" height="583" rx="22" fill="#0b1424" fill-opacity=".13"/>
+  <rect x="145" y="121" width="870" height="583" rx="22" fill="url(#card)"/>
+  <path d="M145 195H1015" stroke="#ffffff" stroke-opacity=".09"/>
+  <circle cx="181" cy="159" r="5" fill="#aab3c0"/><circle cx="201" cy="159" r="5" fill="#aab3c0" fill-opacity=".5"/><circle cx="221" cy="159" r="5" fill="#aab3c0" fill-opacity=".3"/>
+  <text x="902" y="165" fill="#a3adbb" font-family="Arial,sans-serif" font-size="11" letter-spacing="2">CONCEPT</text>
+  <text x="198" y="253" fill="#dce1e8" font-family="Arial,sans-serif" font-size="15" letter-spacing="2">VOICE RECEPTION</text>
+  <text x="198" y="294" fill="#f2f4f6" font-family="Arial,sans-serif" font-size="30">A helpful first hello.</text>
+  <circle cx="432" cy="440" r="101" fill="url(#disc)"/>
+  <ellipse cx="432" cy="440" rx="132" ry="36" transform="rotate(-28 432 440)" fill="none" stroke="#d6ad87" stroke-width="1.5"/>
+  <path d="M275 608V593M288 619V582M301 630V571M314 613V588M327 639V562M340 625V576M353 650V551M366 633V568M379 620V581M392 636V565M405 655V546M418 640V561M431 628V573M444 648V553M457 634V567M470 620V581M483 639V562M496 626V575M509 614V587M522 629V572M535 616V585M548 606V595" stroke="#dce1e9" stroke-opacity=".8" stroke-width="4" stroke-linecap="round"/>
+  <rect x="646" y="331" width="313" height="291" rx="13" fill="#ffffff" fill-opacity=".055" stroke="#ffffff" stroke-opacity=".1"/>
+  <text x="672" y="375" fill="#c8d0dc" font-family="Arial,sans-serif" font-size="12" letter-spacing="1.4">VIEWING PREFERENCES</text>
+  <text x="672" y="420" fill="#8e9bae" font-family="Arial,sans-serif" font-size="11">PROPERTY TYPE</text><text x="672" y="448" fill="#ecf0f4" font-family="Arial,sans-serif" font-size="17">A place to call home</text>
+  <path d="M672 470H932" stroke="#ffffff" stroke-opacity=".09"/>
+  <text x="672" y="503" fill="#8e9bae" font-family="Arial,sans-serif" font-size="11">NEXT STEP</text><text x="672" y="531" fill="#ecf0f4" font-family="Arial,sans-serif" font-size="17">Arrange a viewing</text>
+  <rect x="672" y="556" width="260" height="39" rx="5" fill="#d9bea2"/><text x="689" y="581" fill="#263247" font-family="Arial,sans-serif" font-size="11">Share with the property team</text>
+</svg>
